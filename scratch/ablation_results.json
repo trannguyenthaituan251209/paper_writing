@@ -1,0 +1,32 @@
+{
+  "Finding": "Majority Vote and Gold Adjudicated labels exhibit 100% concordance (1822/1822 identical records) because zero raw messages had a 5-vs-5 tie.",
+  "Concordance_Percent": "100.0%",
+  "Label_Flips": 0,
+  "Models": {
+    "SVM (Linear)": {
+      "Gold_F1": "95.78% ± 1.68%",
+      "Majority_F1": "95.78% ± 1.68%",
+      "F1_Delta": "+0.00%"
+    },
+    "SVM (RBF)": {
+      "Gold_F1": "95.57% ± 1.41%",
+      "Majority_F1": "95.57% ± 1.41%",
+      "F1_Delta": "+0.00%"
+    },
+    "Logistic Regression": {
+      "Gold_F1": "95.08% ± 1.46%",
+      "Majority_F1": "95.08% ± 1.46%",
+      "F1_Delta": "+0.00%"
+    },
+    "Multi-Layer Perceptron": {
+      "Gold_F1": "94.70% ± 1.36%",
+      "Majority_F1": "94.70% ± 1.36%",
+      "F1_Delta": "+0.00%"
+    },
+    "Multinomial Naive Bayes": {
+      "Gold_F1": "89.68% ± 1.83%",
+      "Majority_F1": "89.68% ± 1.83%",
+      "F1_Delta": "+0.00%"
+    }
+  }
+}

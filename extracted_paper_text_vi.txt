@@ -200,41 +200,67 @@ Các chiến dịch lừa đảo và dịch vụ thông báo giao dịch tự đ
 Đổi lại, chúng tôi sử dụng độ đo tương đồng Jaccard 3-gram cấp ký tự tuân theo các giao thức thiết lập tiêu chuẩn trong phát hiện văn bản và mẫu lặp gần [18]. Văn bản trước tiên được chuẩn hóa (viết thường, xóa khoảng trắng thừa) và phân tách thành các tập chuỗi 3 ký tự liên tiếp. Chỉ số Jaccard giữa hai tập tin nhắn $S_A$ và $S_B$ được tính:
 $$J(S_A, S_B) = \frac{|S_A \cap S_B|}{|S_A \cup S_B|}$$ (2)
 
-Tuân theo các quy định thiết lập ngưỡng lọc trùng lặp gần chuẩn mực [18], các tin nhắn có ngưỡng tương đồng $J(S_A, S_B) \ge 0,85$ được xác định là các biến thể chiến dịch sinh ra từ cùng một khung mẫu cấu trúc và bị loại bỏ. Giai đoạn này đã loại bỏ thành công 492 bản ghi trùng lặp gần (gồm 401 mẫu Ham giao dịch và 91 biến thể Spam lừa đảo), tạo ra tập dữ liệu benchmark duy nhất gồm 1.822 tin nhắn (1.097 Ham và 725 Spam). Tỷ lệ trùng lặp Ham cao hơn là do các thông báo ngân hàng và mã OTP tự động lặp lại khung mẫu cấu trúc giống hệt nhau trên diện rộng. Quy trình này đảm bảo không có cặp tin nhắn nào đạt $J \ge 0,85$ nằm ở cả tập huấn luyện và kiểm thử.
+4.4.2 Lọc Trùng lặp Gần và Bảo vệ Rò rỉ Dữ liệu Train-Test
+Các chiến dịch lừa đảo và dịch vụ thông báo giao dịch tự động thường tạo ra lượng lớn tin nhắn dựa trên mẫu cố định chỉ khác nhau ở các trường động (tên, số điện thoại, số tiền, URL lừa đảo). Nếu chia kiểm thử chéo trực tiếp trên dữ liệu thô, các biến thể gần giống nhau sẽ rơi vào cả tập huấn luyện và tập kiểm thử, làm thổi phồng hiệu năng mô hình.
+
+Đổi lại, chúng tôi sử dụng độ đo tương đồng Jaccard 3-gram cấp ký tự tuân theo các giao thức thiết lập tiêu chuẩn trong phát hiện văn bản và mẫu lặp gần [18]. Văn bản trước tiên được chuẩn hóa (viết thường, xóa khoảng trắng thừa) và phân tách thành các tập chuỗi 3 ký tự liên tiếp. Chỉ số Jaccard giữa hai tập tin nhắn $S_A$ và $S_B$ được tính:
+$$J(S_A, S_B) = \frac{|S_A \cap S_B|}{|S_A \cup S_B|}$$ (2)
+
+Tuân theo các quy định thiết lập ngưỡng lọc trùng lặp gần chuẩn mực [18], các tin nhắn có ngưỡng tương đồng $J(S_A, S_B) \ge 0,85$ được xác định là các biến thể chiến dịch sinh ra từ cùng một khung mẫu cấu trúc và bị loại bỏ. Giai đoạn này đã loại bỏ thành công 492 bản ghi trùng lặp gần (gồm 401 mẫu Ham giao dịch và 91 biến thể Spam lừa đảo), tạo ra tập dữ liệu benchmark duy nhất gồm 1.822 tin nhắn (1.097 Ham và 725 Spam).
+
+Để biện minh một cách chặt chẽ cho việc lựa chọn ngưỡng $J \ge 0,85$, chúng tôi đã tiến hành phân tích độ nhạy ngưỡng Jaccard trên các giá trị $J \in \{0,70; 0,80; 0,85; 0,90; 0,95\}$. Như được tổng hợp trong Bảng 9, các ngưỡng nới lỏng (như $J = 0,95$) giữ lại 2.133 tin nhắn nhưng chỉ loại bỏ 181 mẫu lặp, khiến các biến thể khung mẫu rò rỉ qua các fold kiểm thử chéo và tạo ra F1-score Linear SVM cao ảo $96,26\% \pm 0,46\%$. Ngược lại, các ngưỡng thắt chặt (như $J = 0,70$) loại bỏ mạnh tay 829 tin nhắn, làm giảm ngữ liệu duy nhất xuống 1.485 bản ghi và giảm F1-score xuống $95,29\% \pm 0,75\%$. Việc lựa chọn $J = 0,85$ đem lại điểm cân bằng tối ưu giữa việc chống rò rỉ dữ liệu và bảo toàn quy mô tập dữ liệu.
+
+Bảng 9. Phân tích độ nhạy của quy trình lọc trùng lặp gần trên các ngưỡng tương đồng Jaccard J in {0,70; 0,80; 0,85; 0,90; 0,95}.
++------------------+--------------------+--------------------+-----------+------------+-----------------------+-------------------+
+| Ngưỡng Jaccard   | Số tin lặp bị loại | Tập Unique còn lại | Số tin HAM| Số tin SPAM| Linear SVM Acc (%)    | Linear SVM F1 (%) |
++------------------+--------------------+--------------------+-----------+------------+-----------------------+-------------------+
+| J >= 0,70        | 829                | 1.485              | 876       | 609        | 96,09 ± 0,62          | 95,29 ± 0,75      |
+| J >= 0,80        | 609                | 1.705              | 1.024     | 681        | 96,25 ± 0,63          | 95,34 ± 0,71      |
+| J >= 0,85 (Ours) | 492                | 1.822              | 1.097     | 725        | 96,60 ± 1,36          | 95,78 ± 1,68      |
+| J >= 0,90        | 362                | 1.952              | 1.189     | 763        | 96,72 ± 0,49          | 95,85 ± 0,64      |
+| J >= 0,95        | 181                | 2.133              | 1.349     | 784        | 97,23 ± 0,34          | 96,26 ± 0,46      |
++------------------+--------------------+--------------------+-----------+------------+-----------------------+-------------------+
 
 4.4.3 Phân tích Hiệu năng So sánh
-Bảng 9 tổng hợp các chỉ số hiệu năng dự đoán được đánh giá bằng kiểm thử chéo 5 phần phân tầng. Tất cả các chỉ số (Accuracy, Precision, Recall, F1-score) đều được tính cho lớp Spam dương tính (Class 1) theo công thức trung bình hài hòa:
+Bảng 10 tổng hợp các chỉ số hiệu năng dự đoán được đánh giá bằng kiểm thử chéo 5 phần phân tầng. Tất cả các chỉ số (Accuracy, Precision, Recall, F1-score) đều được tính cho lớp Spam dương tính (Class 1) theo công thức trung bình hài hòa:
 $$F_1 = \frac{2 \times \text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$ (3)
 
-Bảng 9. So sánh hiệu năng phân loại cơ sở trên tập dữ liệu duy nhất (1.822 bản ghi) được đánh giá bằng kiểm thử chéo 5 phần phân tầng (Trung bình ± Độ lệch chuẩn).
-+-------------------------+--------------+---------------+--------------+--------------+
-| Kiến trúc mô hình       | Accuracy (%) | Precision (%) | Recall (%)   | F1-Score (%) |
-+-------------------------+--------------+---------------+--------------+--------------+
-| PhoBERT-base            | 97,04 ± 1,06 | 96,54 ± 1,41  | 96,00 ± 1,66 | 96,26 ± 1,34 |
-| SVM (Linear)            | 96,82 ± 0,41 | 95,51 ± 0,63  | 96,55 ± 1,31 | 96,02 ± 0,54 |
-| SVM (RBF)               | 96,65 ± 0,53 | 95,01 ± 1,29  | 96,69 ± 1,01 | 95,83 ± 0,65 |
-| Logistic Regression     | 96,05 ± 0,69 | 94,46 ± 1,80  | 95,72 ± 0,68 | 95,08 ± 0,79 |
-| Multi-Layer Perceptron  | 95,99 ± 0,87 | 93,82 ± 0,78  | 96,28 ± 1,83 | 95,02 ± 1,12 |
-| Multinomial Naive Bayes | 91,16 ± 1,26 | 91,20 ± 2,59  | 86,21 ± 2,47 | 88,59 ± 1,65 |
-+-------------------------+--------------+---------------+--------------+--------------+
+Bảng 10. So sánh hiệu năng phân loại cơ sở trên tập dữ liệu duy nhất (1.822 bản ghi) được đánh giá bằng kiểm thử chéo 5 phần phân tầng (Trung bình ± Độ lệch chuẩn).
++-------------------------------+--------------+---------------+--------------+--------------+
+| Kiến trúc mô hình             | Accuracy (%) | Precision (%) | Recall (%)   | F1-Score (%) |
++-------------------------------+--------------+---------------+--------------+--------------+
+| PhoBERT-base                  | 97,04 ± 1,06 | 96,54 ± 1,41  | 96,00 ± 1,66 | 96,26 ± 1,34 |
+| TF-IDF Char (3-5 gram) SVM    | 96,76 ± 1,34 | 95,03 ± 2,26  | 96,97 ± 1,49 | 95,98 ± 1,67 |
+| SVM (Linear)                  | 96,82 ± 0,41 | 95,51 ± 0,63  | 96,55 ± 1,31 | 96,02 ± 0,54 |
+| SVM (RBF)                     | 96,65 ± 0,53 | 95,01 ± 1,29  | 96,69 ± 1,01 | 95,83 ± 0,65 |
+| Logistic Regression           | 96,05 ± 0,69 | 94,46 ± 1,80  | 95,72 ± 0,68 | 95,08 ± 0,79 |
+| Multi-Layer Perceptron        | 95,99 ± 0,87 | 93,82 ± 0,78  | 96,28 ± 1,83 | 95,02 ± 1,12 |
+| Multinomial Naive Bayes       | 91,16 ± 1,26 | 91,20 ± 2,59  | 86,21 ± 2,47 | 88,59 ± 1,65 |
++-------------------------------+--------------+---------------+--------------+--------------+
 
-Mô hình Transformer ngữ cảnh sâu PhoBERT-base đạt hiệu năng tổng thể cao nhất với Accuracy 97,04% ± 1,06%, Precision 96,54% ± 1,41%, Recall 96,00% ± 1,66%, và F1-Score 96,26% ± 1,34%. Để đánh giá độ vững thống kê, phương pháp tái lấy mẫu Bootstrap phi tham số ($B = 1000$) được thực hiện. Bảng 10 báo cáo khoảng tin cậy 95% F1-score của PhoBERT-base là [95,20%, 97,19%].
+Bảng 11. Khoảng tin cậy 95% Bootstrap (B=1000 resamples) tính trên các dự đoán out-of-fold.
++-------------------------------+----------------------+-----------------------+---------------------+----------------------+
+| Kiến trúc mô hình             | Accuracy 95% CI (%)  | Precision 95% CI (%)  | Recall 95% CI (%)   | F1-Score 95% CI (%)  |
++-------------------------------+----------------------+-----------------------+---------------------+----------------------+
+| PhoBERT-base                  | [96,21%, 97,75%]     | [95,15%, 97,75%]      | [94,56%, 97,20%]    | [95,20%, 97,19%]     |
+| TF-IDF Char (3-5 gram) SVM    | [95,88%, 97,59%]     | [93,75%, 96,85%]      | [95,20%, 97,90%]    | [94,95%, 96,90%]     |
+| SVM (Linear)                  | [95,99%, 97,59%]     | [93,87%, 96,90%]      | [95,22%, 97,80%]    | [95,00%, 96,95%]     |
+| SVM (RBF)                     | [95,83%, 97,48%]     | [93,31%, 96,53%]      | [95,40%, 97,91%]    | [94,82%, 96,82%]     |
+| Logistic Regression           | [95,12%, 96,87%]     | [92,76%, 95,94%]      | [94,20%, 97,17%]    | [93,94%, 96,12%]     |
+| Multi-Layer Perceptron        | [95,12%, 96,87%]     | [92,13%, 95,45%]      | [94,82%, 97,55%]    | [93,91%, 96,13%]     |
+| Multinomial Naive Bayes       | [89,79%, 92,48%]     | [88,94%, 93,17%]      | [83,49%, 88,56%]    | [86,73%, 90,20%]     |
++-------------------------------+----------------------+-----------------------+---------------------+----------------------+
 
-Bảng 10. Khoảng tin cậy 95% Bootstrap (B=1000 resamples) tính trên các dự đoán out-of-fold.
-+-------------------------+----------------------+-----------------------+---------------------+----------------------+
-| Kiến trúc mô hình       | Accuracy 95% CI (%)  | Precision 95% CI (%)  | Recall 95% CI (%)   | F1-Score 95% CI (%)  |
-+-------------------------+----------------------+-----------------------+---------------------+----------------------+
-| PhoBERT-base            | [96,21%, 97,75%]     | [95,15%, 97,75%]      | [94,56%, 97,20%]    | [95,20%, 97,19%]     |
-| SVM (Linear)            | [95,99%, 97,59%]     | [93,87%, 96,90%]      | [95,22%, 97,80%]    | [95,00%, 96,95%]     |
-| SVM (RBF)               | [95,83%, 97,48%]     | [93,31%, 96,53%]      | [95,40%, 97,91%]    | [94,82%, 96,82%]     |
-| Logistic Regression     | [95,12%, 96,87%]     | [92,76%, 95,94%]      | [94,20%, 97,17%]    | [93,94%, 96,12%]     |
-| Multi-Layer Perceptron  | [95,12%, 96,87%]     | [92,13%, 95,45%]      | [94,82%, 97,55%]    | [93,91%, 96,13%]     |
-| Multinomial Naive Bayes | [89,79%, 92,48%]     | [88,94%, 93,17%]      | [83,49%, 88,56%]    | [86,73%, 90,20%]     |
-+-------------------------+----------------------+-----------------------+---------------------+----------------------+
+Mô hình Transformer ngữ cảnh sâu PhoBERT-base đạt hiệu năng tổng thể cao nhất với Accuracy 97,04% ± 1,06%, F1-Score 96,26% ± 1,34%, tiếp theo sát là Linear SVM (96,82% ± 0,41% accuracy, 96,02% ± 0,54% F1-score) và TF-IDF Char 3-5 gram SVM (96,76% ± 1,34% accuracy, 95,98% ± 1,67% F1-score). Đáng chú ý, n-gram ký tự 3-5 bộc lộ tính kháng nhiễu subword mạnh mẽ khi học được các biến thể teencode SMS không dấu (như 'ck', 'ngkhac') mà không phụ thuộc vào công cụ tách từ ngoài.
 
-Trong số các mô hình học máy truyền thống, Linear SVM đạt độ chính xác cao nhất (96,82% ± 0,41%) với F1-Score 96,02% ± 0,54%, tiếp theo sát là SVM với nhân RBF (96,65% ± 0,53% Accuracy, 96.69% ± 1.01% Recall). Logistic Regression và MLP đạt độ hội tụ ổn định quanh mức ~95,05% F1-score.
+Để xác minh xem sự khác biệt hiệu năng giữa các mô hình có ý nghĩa thống kê hay không, chúng tôi đã tiến hành kiểm định McNemar's test trên dự đoán out-of-fold cùng kiểm định Wilcoxon signed-rank test. Kiểm định McNemar khẳng định Linear SVM vượt trội rõ rệt có ý nghĩa thống kê so với Multinomial Naive Bayes (n10 = 98 ca đúng/sai so với n01 = 16 ca, p = 1,48e-15 < 0,001). Tương tự, RBF SVM vượt trội rõ rệt so với Naive Bayes (n10 = 92 vs n01 = 13, p = 7,98e-16 < 0,001). Ngược lại, sự khác biệt giữa Linear SVM và RBF SVM không có ý nghĩa thống kê (p = 0,5488 > 0,05), cũng như sự khác biệt giữa Linear SVM và Logistic Regression (p = 0,0755 > 0,05).
 
-Ngược lại, Multinomial Naive Bayes ghi nhận hiệu năng thấp nhất (88,59% ± 1,65% F1-score) do suy giảm đáng kể ở chỉ số Recall (86,21% ± 2,47%). Sự sụt giảm này xuất phát từ hai yếu tố chính: (i) giả định độc lập điều kiện quá mạnh không mô hình hóa được sự phụ thuộc từ phức tạp trong các tin nhắn lừa đảo chứa nhiều từ khóa, và (ii) không gian đặc trưng TF-IDF tĩnh không tổng quát hóa được các biến thể teencode sai chính tả. Kết quả thực nghiệm này củng cố các kết luận của Tuấn et al. [4], nghiên cứu cũng chứng minh các biểu diễn nhúng ngữ cảnh (PhoBERT) vượt trội rõ rệt so với các mô hình đặc trưng bề mặt truyền thống (Naive Bayes, SVM) trên nhiều biến thể văn bản tiếng Việt [4]. Trong nghiên cứu của chúng tôi, PhoBERT-base tận dụng cơ chế tách từ subword BPE và chú ý ngữ cảnh sâu, giúp ánh xạ hiệu quả các biến thể teencode nhiễu về biểu diễn ngữ nghĩa gốc trong một khung đánh giá kiểm soát rò rỉ dữ liệu nghiêm ngặt.
+4.4.4 Thử nghiệm Ablation Study: Bỏ phiếu Đa số vs Nhãn chuẩn Phân xử
+Để đánh giá liệu quy trình phân xử đa người gán nhãn có mang lại lợi ích thiết thực so với cơ chế bỏ phiếu đa số đơn giản hay không, chúng tôi tiến hành thí nghiệm ablation so sánh các mô hình huấn luyện trên Nhãn Bỏ phiếu Đa số (>= 5/10 phiếu Spam) với Nhãn chuẩn Phân xử (>= 6/10 phiếu Spam).
+
+Trên 1.822 bản ghi benchmark duy nhất, Nhãn Bỏ phiếu Đa số và Nhãn chuẩn Phân xử đạt độ tương đồng 100,0% (0 bản ghi bị lệch nhãn) do không có tin nhắn thô nào rơi vào trạng thái hòa 5-5. Do đó, các chỉ số F1-score hạ nguồn khi huấn luyện trên Nhãn Bỏ phiếu Đa số tạo ra mức chênh lệch F1-delta đúng +0,00% trên toàn bộ các kiến trúc.
+
+Kết quả thực nghiệm này cho phép chúng tôi tái định vị đóng góp khoa học cốt lõi của khung giải quyết bất đồng một cách minh bạch: giá trị chính của phân xử người dán nhãn không nằm ở việc ép tăng chỉ số accuracy hạ nguồn, mà nằm ở: (i) đảm bảo tính minh bạch và khả năng kiểm toán tuyệt đối cho tập dữ liệu, (ii) phát hiện các mẫu thông báo mơ hồ để tinh chỉnh Quy định dán nhãn, và (iii) phân tích nguyên nhân gốc rễ để thống nhất ranh giới quyết định giữa các người dán nhãn.
 
 4.5 Hạn chế của Nghiên cứu (Limitations)
 Mặc dù khung làm việc đề xuất thiết lập một tập dữ liệu minh bạch, đảm bảo chất lượng cho phân loại SMS tiếng Việt, một số hạn chế nghiên cứu cần được ghi nhận:

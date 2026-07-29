@@ -1,0 +1,8 @@
+{
+  "Char_Ngram_TFIDF_SVM": {
+    "Accuracy": "96.76% ± 1.34%",
+    "Precision": "95.03% ± 2.26%",
+    "Recall": "96.97% ± 1.49%",
+    "F1_Score": "95.98% ± 1.67%"
+  }
+}

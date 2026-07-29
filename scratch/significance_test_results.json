@@ -1,0 +1,34 @@
+{
+  "Linear_SVM vs Naive_Bayes": {
+    "McNemar_n10 (Model1 right, Model2 wrong)": 98,
+    "McNemar_n01 (Model1 wrong, Model2 right)": 16,
+    "McNemar_p_value": 1.477416366478583e-15,
+    "McNemar_Significant (alpha=0.05)": true,
+    "Wilcoxon_p_value": 0.0625,
+    "Wilcoxon_Significant (alpha=0.05)": false
+  },
+  "RBF_SVM vs Naive_Bayes": {
+    "McNemar_n10 (Model1 right, Model2 wrong)": 92,
+    "McNemar_n01 (Model1 wrong, Model2 right)": 13,
+    "McNemar_p_value": 7.984598955148307e-16,
+    "McNemar_Significant (alpha=0.05)": true,
+    "Wilcoxon_p_value": 0.0625,
+    "Wilcoxon_Significant (alpha=0.05)": false
+  },
+  "Linear_SVM vs RBF_SVM": {
+    "McNemar_n10 (Model1 right, Model2 wrong)": 7,
+    "McNemar_n01 (Model1 wrong, Model2 right)": 4,
+    "McNemar_p_value": 0.548828125,
+    "McNemar_Significant (alpha=0.05)": false,
+    "Wilcoxon_p_value": 0.25,
+    "Wilcoxon_Significant (alpha=0.05)": false
+  },
+  "Linear_SVM vs Logistic_Regression": {
+    "McNemar_n10 (Model1 right, Model2 wrong)": 18,
+    "McNemar_n01 (Model1 wrong, Model2 right)": 8,
+    "McNemar_p_value": 0.07551869750022888,
+    "McNemar_Significant (alpha=0.05)": false,
+    "Wilcoxon_p_value": 0.125,
+    "Wilcoxon_Significant (alpha=0.05)": false
+  }
+}
