@@ -204,30 +204,30 @@ Tuân theo các quy định thiết lập ngưỡng lọc trùng lặp gần chu
 Bảng 9 tổng hợp các chỉ số hiệu năng dự đoán được đánh giá bằng kiểm thử chéo 5 phần phân tầng. Tất cả các chỉ số (Accuracy, Precision, Recall, F1-score) đều được tính cho lớp Spam dương tính (Class 1) theo công thức trung bình hài hòa:
 $$F_1 = \frac{2 \times \text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$ (3)
 
-Bảng 9. So sánh hiệu năng phân loại cơ sở trên tập dữ liệu duy nhất (1.541 bản ghi) được đánh giá bằng kiểm thử chéo 5 phần phân tầng (Trung bình ± Độ lệch chuẩn).
+Bảng 9. So sánh hiệu năng phân loại cơ sở trên tập dữ liệu duy nhất (1.822 bản ghi) được đánh giá bằng kiểm thử chéo 5 phần phân tầng (Trung bình ± Độ lệch chuẩn).
 +-------------------------+--------------+---------------+--------------+--------------+
 | Kiến trúc mô hình       | Accuracy (%) | Precision (%) | Recall (%)   | F1-Score (%) |
 +-------------------------+--------------+---------------+--------------+--------------+
-| PhoBERT-base            | 97,99 ± 0,91 | 97,74 ± 1,25  | 97,59 ± 1,00 | 97,66 ± 1,05 |
-| SVM (Linear)            | 96,69 ± 1,86 | 95,21 ± 3,12  | 97,29 ± 1,31 | 96,22 ± 2,10 |
-| SVM (RBF)               | 96,88 ± 1,57 | 94,97 ± 2,98  | 98,04 ± 0,60 | 96,46 ± 1,75 |
-| Multi-Layer Perceptron  | 96,30 ± 1,69 | 94,62 ± 2,73  | 96,98 ± 1,36 | 95,77 ± 1,90 |
-| Logistic Regression     | 96,30 ± 1,50 | 94,87 ± 2,54  | 96,68 ± 1,02 | 95,76 ± 1,68 |
-| Multinomial Naive Bayes | 93,58 ± 1,02 | 94,25 ± 1,62  | 90,65 ± 2,71 | 92,38 ± 1,28 |
+| PhoBERT-base            | 97,04 ± 1,06 | 96,54 ± 1,41  | 96,00 ± 1,66 | 96,26 ± 1,34 |
+| SVM (Linear)            | 96,82 ± 0,41 | 95,51 ± 0,63  | 96,55 ± 1,31 | 96,02 ± 0,54 |
+| SVM (RBF)               | 96,65 ± 0,53 | 95,01 ± 1,29  | 96,69 ± 1,01 | 95,83 ± 0,65 |
+| Logistic Regression     | 96,05 ± 0,69 | 94,46 ± 1,80  | 95,72 ± 0,68 | 95,08 ± 0,79 |
+| Multi-Layer Perceptron  | 95,99 ± 0,87 | 93,82 ± 0,78  | 96,28 ± 1,83 | 95,02 ± 1,12 |
+| Multinomial Naive Bayes | 91,16 ± 1,26 | 91,20 ± 2,59  | 86,21 ± 2,47 | 88,59 ± 1,65 |
 +-------------------------+--------------+---------------+--------------+--------------+
 
-Mô hình Transformer ngữ cảnh sâu PhoBERT-base đạt hiệu năng tổng thể cao nhất với Accuracy 97,99% ± 0,91%, Precision 97,74% ± 1,25%, Recall 97,59% ± 1,00%, và F1-Score 97,66% ± 1,05%. Để đánh giá độ vững thống kê, phương pháp tái lấy mẫu Bootstrap phi tham số ($B = 1000$) được thực hiện. Bảng 10 báo cáo khoảng tin cậy 95% F1-score của PhoBERT-base là [96,85%, 98,42%].
+Mô hình Transformer ngữ cảnh sâu PhoBERT-base đạt hiệu năng tổng thể cao nhất với Accuracy 97,04% ± 1,06%, Precision 96,54% ± 1,41%, Recall 96,00% ± 1,66%, và F1-Score 96,26% ± 1,34%. Để đánh giá độ vững thống kê, phương pháp tái lấy mẫu Bootstrap phi tham số ($B = 1000$) được thực hiện. Bảng 10 báo cáo khoảng tin cậy 95% F1-score của PhoBERT-base là [95,20%, 97,19%].
 
 Bảng 10. Khoảng tin cậy 95% Bootstrap (B=1000 resamples) tính trên các dự đoán out-of-fold.
 +-------------------------+----------------------+-----------------------+---------------------+----------------------+
 | Kiến trúc mô hình       | Accuracy 95% CI (%)  | Precision 95% CI (%)  | Recall 95% CI (%)   | F1-Score 95% CI (%)  |
 +-------------------------+----------------------+-----------------------+---------------------+----------------------+
-| PhoBERT-base            | [97,27%, 98,64%]     | [96,59%, 98,79%]      | [96,38%, 98,64%]    | [96,85%, 98,42%]     |
-| SVM (Linear)            | [95,78%, 97,47%]     | [93,52%, 96,55%]      | [96,02%, 98,44%]    | [95,15%, 97.10%]     |
-| SVM (RBF)               | [95,98%, 97,73%]     | [93,26%, 96,45%]      | [96,97%, 99,07%]    | [95,36%, 97,38%]     |
-| Multi-Layer Perceptron  | [95,33%, 97,14%]     | [92,93%, 96,11%]      | [95,59%, 98,17%]    | [94,63%, 96,76%]     |
-| Logistic Regression     | [95,33%, 97,14%]     | [92,95%, 96,40%]      | [95,32%, 97,91%]    | [94,62%, 96,75%]     |
-| Multinomial Naive Bayes | [92,34%, 94,81%]     | [92,24%, 95,94%]      | [88,22%, 92,73%]    | [90,73%, 93,83%]     |
+| PhoBERT-base            | [96,21%, 97,75%]     | [95,15%, 97,75%]      | [94,56%, 97,20%]    | [95,20%, 97,19%]     |
+| SVM (Linear)            | [95,99%, 97,59%]     | [93,87%, 96,90%]      | [95,22%, 97,80%]    | [95,00%, 96,95%]     |
+| SVM (RBF)               | [95,83%, 97,48%]     | [93,31%, 96,53%]      | [95,40%, 97,91%]    | [94,82%, 96,82%]     |
+| Logistic Regression     | [95,12%, 96,87%]     | [92,76%, 95,94%]      | [94,20%, 97,17%]    | [93,94%, 96,12%]     |
+| Multi-Layer Perceptron  | [95,12%, 96,87%]     | [92,13%, 95,45%]      | [94,82%, 97,55%]    | [93,91%, 96,13%]     |
+| Multinomial Naive Bayes | [89,79%, 92,48%]     | [88,94%, 93,17%]      | [83,49%, 88,56%]    | [86,73%, 90,20%]     |
 +-------------------------+----------------------+-----------------------+---------------------+----------------------+
 
 Trong số các mô hình học máy truyền thống, SVM với nhân RBF đạt Recall cao nhất (98,04% ± 0,60%) với F1-Score 96,46% ± 1,75%, tiếp theo là Linear SVM (96.22% ± 2.10%). Logistic Regression và MLP đạt độ hội tụ ổn định quanh mức ~95,76% F1-score.
