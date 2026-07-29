@@ -195,10 +195,10 @@ Sau quy trình phân xử, 100% tập dữ liệu (2.007 tin nhắn) đã đư�
 4.4.2 Lọc Trùng lặp Gần và Bảo vệ Rò rỉ Dữ liệu Train-Test
 Các chiến dịch lừa đảo và dịch vụ thông báo giao dịch tự động thường tạo ra lượng lớn tin nhắn dựa trên mẫu cố định chỉ khác nhau ở các trường động (tên, số điện thoại, số tiền, URL lừa đảo). Nếu chia kiểm thử chéo trực tiếp trên dữ liệu thô, các biến thể gần giống nhau sẽ rơi vào cả tập huấn luyện và tập kiểm thử, làm thổi phồng hiệu năng mô hình.
 
-Đổi lại, chúng tôi sử dụng độ đo tương đồng Jaccard 3-gram cấp ký tự. Văn bản trước tiên được chuẩn hóa (viết thường, xóa khoảng trắng thừa) và phân tách thành các tập chuỗi 3 ký tự liên tiếp. Chỉ số Jaccard giữa hai tập tin nhắn $S_A$ và $S_B$ được tính:
+Đổi lại, chúng tôi sử dụng độ đo tương đồng Jaccard 3-gram cấp ký tự tuân theo các giao thức thiết lập tiêu chuẩn trong phát hiện văn bản và mẫu lặp gần [18]. Văn bản trước tiên được chuẩn hóa (viết thường, xóa khoảng trắng thừa) và phân tách thành các tập chuỗi 3 ký tự liên tiếp. Chỉ số Jaccard giữa hai tập tin nhắn $S_A$ và $S_B$ được tính:
 $$J(S_A, S_B) = \frac{|S_A \cap S_B|}{|S_A \cup S_B|}$$ (2)
 
-Các tin nhắn có ngưỡng tương đồng $J(S_A, S_B) \ge 0,85$ được xác định là biến thể chiến dịch và bị loại bỏ. Giai đoạn này đã loại bỏ thành công 466 bản ghi trùng lặp gần (gồm 408 mẫu Ham giao dịch và 58 biến thể Spam lừa đảo), tạo ra tập dữ liệu benchmark duy nhất gồm 1.541 tin nhắn (878 Ham và 663 Spam). Tỷ lệ trùng lặp Ham cao hơn là do các thông báo ngân hàng và mã OTP tự động lặp lại khung mẫu cấu trúc giống hệt nhau trên diện rộng.
+Tuân theo các quy định thiết lập ngưỡng lọc trùng lặp gần chuẩn mực [18], các tin nhắn có ngưỡng tương đồng $J(S_A, S_B) \ge 0,85$ được xác định là các biến thể chiến dịch sinh ra từ cùng một khung mẫu cấu trúc và bị loại bỏ. Giai đoạn này đã loại bỏ thành công 466 bản ghi trùng lặp gần (gồm 408 mẫu Ham giao dịch và 58 biến thể Spam lừa đảo), tạo ra tập dữ liệu benchmark duy nhất gồm 1.541 tin nhắn (878 Ham và 663 Spam). Tỷ lệ trùng lặp Ham cao hơn là do các thông báo ngân hàng và mã OTP tự động lặp lại khung mẫu cấu trúc giống hệt nhau trên diện rộng. Quy trình này đảm bảo không có cặp tin nhắn nào đạt $J \ge 0,85$ nằm ở cả tập huấn luyện và kiểm thử.
 
 4.4.3 Phân tích Hiệu năng So sánh
 Bảng 9 tổng hợp các chỉ số hiệu năng dự đoán được đánh giá bằng kiểm thử chéo 5 phần phân tầng. Tất cả các chỉ số (Accuracy, Precision, Recall, F1-score) đều được tính cho lớp Spam dương tính (Class 1) theo công thức trung bình hài hòa:
@@ -264,3 +264,4 @@ Tài liệu tham khảo (References)
 15. Rumelhart, D.E., Hinton, G.E., Williams, R.J.: Learning representations by back-propagating errors. Nature 323(6088), 533–536 (1986). https://doi.org/10.1038/323533a0
 16. Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J.: Scikit-learn: Machine learning in Python. Journal of Machine Learning Research 12, 2825–2830 (2011).
 17. Xuan-Luan Nguyen: PyVi: Vietnamese Natural Language Processing Toolkit (2016). Available at: https://github.com/trungtn/pyvi.
+18. Broder, A.Z.: On the resemblance and containment of documents. In: Proceedings of Compression and Complexity of Sequences 1997, pp. 21–29. IEEE (1997). https://doi.org/10.1109/SEQUEN.1997.666900
