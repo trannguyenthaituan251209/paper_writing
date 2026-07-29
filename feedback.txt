@@ -1,0 +1,83 @@
+trạng thái hiện tại bài sẽ bị desk-reject ở Q1, vì ba lý do: (1) có lỗi số liệu và công thức mâu thuẫn ngay trong bài, (2) đóng góp khoa học chưa được chứng minh bằng thực nghiệm, (3) quy mô dataset nhỏ hơn chính baseline mà bài so sánh.
+A. LỖI BẮT BUỘC SỬA (blocking — reviewer thấy là reject ngay)
+A1. Công thức F1 sai (Eq. 3)
+Bài viết F₁ = 2×Precision×Recall / (Precision×Recall). Mẫu số phải là Precision + Recall. Một lỗi công thức cơ bản như vậy trong phần Results khiến reviewer nghi ngờ toàn bộ phần thực nghiệm.
+A2. Số liệu mâu thuẫn giữa các phần
+Vị trí Con số Mâu thuẫn với
+Table 3, gold_standard.csv "1,763 fully adjudicated messages" 2,007 ở Abstract, §4.3, §4.4.2, Kết luận
+Fig. 3 (10/10) HAM 1260, SPAM 467 Table 7: HAM 1,259 / SPAM 704
+Fig. 3 tổng 10/10 1260+467 = 1,727 1,963 ở Table 7 & §4.2
+Fig. 3 các mức 9/10→6/10 3, 19, 2, 1, 3, 4, 4 Table 7: 3/20, 2/4, 3/7, 0/5
+Table 4, message_id kiểu Integer ví dụ COM_001 (string)
+Table 4, source (crawl, user_report, whitelist) ví dụ ghi "internet"
+Table 4 raw_corpus.csv có gold_label, agreement
+Ngoài ra gold_standard.csv và benchmark_subset.csv không có message_id → không thể truy vết ngược về metadata_distribution.json. Đây là lỗi thiết kế repository nghiêm trọng với một bài dataset.
+Hành động: dựng một bảng "data flow" duy nhất (2,058 → −51 → 2,007 → −466 → 1,541) và ép mọi bảng/hình/câu văn khớp với nó. Vẽ lại Fig. 3 từ chính file dữ liệu, không vẽ tay.
+A3. Rò rỉ trong model selection của PhoBERT
+Bài ghi load_best_model_at_end=True, "Model selection was governed by evaluating the highest F1-score on the positive class at each epoch". Trong 5-fold CV, nếu tập dùng để chọn epoch chính là test fold, thì kết quả 97.99% là optimistically biased — đây là lỗi phương pháp mà reviewer Q1 chắc chắn bắt được.
+Bắt buộc: tách nested split (ví dụ 80/10/10 trong mỗi fold: train / dev để chọn epoch / test fold để báo cáo), chạy lại toàn bộ, và nói rõ trong bài. Nếu kết quả giảm — vẫn tốt hơn là bị bắt lỗi.
+A4. Cross-reference sai
+§4.1, §4.2 viết "Annotation Guideline described in Section 2" → phải là §3.3.
+§4.3: "As detailed in Table 7, the resolution process..." → phải là Table 9.
+"Table 3 outlines the explicit attribute schema" → phải là Table 4.
+Ref [2] (Viettel) không được trích dẫn ở đâu trong thân bài.
+Related Work viết "Pham and Le-Hong (2016)" không kèm số [3]; Table 1 ghi "Almeida et al." không kèm [6].
+A5. Đoạn văn bị lặp nguyên văn
+Trong §3.3, đoạn "The guideline also specifies decision rules for ambiguous cases... promotion, bank, or reward does not automatically indicate spam..." xuất hiện hai lần gần như y hệt. Reviewer sẽ coi đây là dấu hiệu bài chưa được đọc lại.
+B1. Vấn đề lớn nhất: dataset nhỏ hơn baseline mà chính bài so sánh
+Table 1 của bài tự cho thấy: Pham & Le-Hong (2016) có 6,599 bản ghi, bài này có 2,007 (thực dùng 1,541). Reviewer sẽ hỏi ngay: "Tại sao tôi nên dùng dataset nhỏ hơn 3 lần?"
+Câu trả lời "vì chất lượng cao hơn" hiện chưa được chứng minh bằng bất kỳ thực nghiệm nào. Đây là lỗ hổng chí mạng.
+Cần làm một trong hai (tốt nhất là cả hai):
+Thí nghiệm cross-dataset (ưu tiên số 1). Xin dataset Pham & Le-Hong (bài ghi "upon request"), rồi báo cáo ma trận 2×2:
+Train ↓ / Test → Ours Pham & Le-Hong
+Ours (1,541) in-domain ?
+Pham & Le-Hong ? in-domain
+Nếu model train trên dataset nhỏ hơn của bạn generalize sang corpus kia tốt hơn chiều ngược lại → đó chính là bằng chứng "chất lượng thắng số lượng", và là đóng góp đủ mạnh cho Q1.
+Audit nhãn của corpus hiện có. Lấy mẫu ngẫu nhiên 300–500 message từ corpus cũ, cho chính 10 annotator của bạn gán lại theo guideline, báo cáo tỉ lệ nhãn sai/label noise. Con số kiểu "chúng tôi phát hiện X% nhãn không nhất quán trong corpus tham chiếu" rất mạnh.
+B2. Framework QA được quảng bá là đóng góp chính, nhưng chưa chứng minh có tác dụng
+Chỉ 44/2,007 (2.19%) message bất đồng. Reviewer sẽ hỏi: nếu chỉ dùng majority voting đơn giản, kết quả downstream có khác không? Với 44 message, gần như chắc chắn là không khác đáng kể — và điều đó làm suy yếu luận điểm trung tâm.
+Cần bổ sung ablation:
+Model train trên nhãn majority-vote vs nhãn adjudicated gold → so sánh F1 trên cùng test set.
+Nếu chênh lệch không có ý nghĩa thống kê, hãy thừa nhận và tái định vị đóng góp: giá trị của framework nằm ở transparency + reproducibility + guideline refinement, không phải ở accuracy gain. Reviewer tôn trọng sự trung thực này hơn nhiều so với overclaim.
+Ngoài ra, một quan sát rất đáng phân tích mà bài bỏ qua: theo Table 7, trong 44 ca bất đồng, majority nghiêng về Spam ở 36 ca / Ham ở 8 ca; nhưng sau adjudication lại thành 27 Ham / 17 Spam. Nghĩa là adjudication đảo ngược majority vote ở rất nhiều ca. Đây là bằng chứng thực nghiệm mạnh nhất trong bài cho việc "majority voting là không đủ" — hãy đưa nó lên thành một finding chính, kèm phân tích định tính.
+B3. Đã định nghĩa taxonomy 3 lớp nhưng chỉ phát hành nhị phân
+Bài định nghĩa rõ Commercial Spam vs Fraudulent/Phishing Spam, tiêu đề file nhắc "Phishing", nhưng lại gộp thành binary. Reviewer Q1 sẽ hỏi: "Nếu annotator đã phân biệt được, tại sao không phát hành nhãn 3 lớp?"
+Nhãn 3 lớp (ham / commercial spam / phishing) sẽ tăng đáng kể giá trị dataset và biện minh cho tiêu đề. Nếu annotator chưa gán 3 lớp, hãy gán lại — chi phí thấp hơn nhiều so với việc thu thập thêm dữ liệu.
+B4. Fleiss' Kappa: cần thận trọng hơn về mặt thống kê
+κ = 0.9856 với 2 lớp và 97.81% perfect agreement là hợp lý về mặt số học, nhưng nên báo cáo kèm khoảng tin cậy (bootstrap CI cho κ) và Krippendorff's α + Gwet's AC1 để chống lại "kappa paradox" khi phân phối lớp lệch.
+Về lý thuyết, Fleiss' Kappa giả định rater được lấy mẫu ngẫu nhiên cho mỗi item; ở đây 10 annotator cố định gán toàn bộ, nên trường hợp này đúng ra phù hợp với Krippendorff's α hoặc multi-rater Cohen. Nên nêu rõ và biện luận, hoặc báo cáo cả hai.
+Cần bổ sung: agreement theo từng annotator (mỗi annotator lệch bao nhiêu so với gold), κ theo từng lớp, và đường cong học tập của annotator qua các vòng.
+Cần nói rõ: sau adjudication κ = 1 một cách hiển nhiên (by construction), tránh gây hiểu nhầm.
+B5. Ai adjudicate? — Thiếu thông tin then chốt
+Bài không nói ai thực hiện adjudication cho 44 ca. Nếu là chính tác giả → conflict of interest, cần khai báo. Cần mô tả: số lượng adjudicator, quy trình (đồng thuận hay biểu quyết), có blind với nhãn ban đầu không.
+C. THỰC NGHIỆM CẦN BỔ SUNG
+# Thí nghiệm Lý do
+1 Kiểm định ý nghĩa thống kê (McNemar trên out-of-fold predictions, hoặc Wilcoxon signed-rank trên 5 fold, kèm hiệu chỉnh Bonferroni/Holm) CI của PhoBERT [96.85, 98.42] và SVM-RBF [95.36, 97.38] chồng lấn → không được kết luận "highest" nếu chưa test
+2 Multi-seed (≥5 seed) cho PhoBERT và MLP Hiện chỉ báo cáo variance giữa fold, không phải variance do khởi tạo
+3 Thêm baseline: ViSoBERT (được huấn luyện cho văn bản mạng xã hội nhiễu — rất hợp SMS teencode), XLM-R, mBERT PhoBERT một mình không đủ cho Q1 năm 2026
+4 Baseline LLM zero-shot / few-shot (GPT-4-class, Gemini, hoặc model mở như Qwen/Llama) Năm 2026, reviewer sẽ hỏi "LLM prompt không cần train thì được bao nhiêu?" Nếu LLM đạt ~95% zero-shot, cần biện luận giá trị của dataset (fine-tuning, on-device, chi phí, privacy)
+5 TF-IDF char n-gram (3–5) Với text không dấu + teencode, char n-gram thường mạnh hơn word n-gram nhiều; hiện chỉ dùng word (1,2)
+6 Group-aware CV thay vì xoá near-duplicate Xoá 466/2,007 (23%) là lãng phí. GroupKFold theo cụm duplicate giữ nguyên dữ liệu mà vẫn chống rò rỉ. Nên báo cáo cả hai để so sánh
+7 Sensitivity analysis cho ngưỡng Jaccard J ≥ 0.85 hiện không có căn cứ. Báo cáo kết quả tại J ∈ {0.7, 0.8, 0.85, 0.9, 0.95}
+8 Temporal / OOD held-out set Giữ riêng các message thu thập ở giai đoạn muộn nhất làm test set. Đây là cách duy nhất chứng minh claim về "zero-day phishing" ở phần Limitations
+9 Error analysis + confusion matrix + ví dụ định tính Bài hoàn toàn không có. Q1 bắt buộc có
+Vấn đề kỹ thuật cần làm rõ: PhoBERT yêu cầu input đã word-segmented bằng VnCoreNLP/RDRSegmenter. Bài chỉ nói dùng PyVi cho TF-IDF, không nói gì về tiền xử lý cho PhoBERT. Nếu đưa raw text thẳng vào PhoBERT thì đó là sai cách dùng model. Phải nêu rõ. Đồng thời nên thảo luận domain mismatch: PhoBERT được pretrain trên văn bản có dấu, trong khi SMS spam chủ yếu không dấu.
+D. ĐẠO ĐỨC, PHÁP LÝ, REPRODUCIBILITY
+Đây là phần Q1 (đặc biệt LREC/LRE, TALLIP, PeerJ CS) soi rất kỹ:
+Thiếu phê duyệt IRB / hội đồng đạo đức. Bài thu thập tin nhắn cá nhân thật từ người dùng. Cần: tên hội đồng, mã số phê duyệt, hoặc tuyên bố miễn trừ chính thức kèm lý do.
+Quy trình consent chưa mô tả. "collected with user consent or obtained from public reporting platforms" quá mơ hồ. Cần: mẫu consent form, cách thu thập, người dùng được thông báo gì.
+Chưa kiểm chứng chất lượng ẩn danh hoá. Cần báo cáo audit thủ công trên mẫu ngẫu nhiên (ví dụ 200 message) để đo tỉ lệ PII còn sót, và mô tả regex/công cụ dùng.
+Bản quyền dữ liệu crawl. Message lấy từ "public internet" có thể vướng ToS của nguồn — cấp phép CC BY 4.0 cho toàn bộ cần được biện minh.
+Không có link repository / DOI. "anonymous-sms-dataset/" chỉ là tên thư mục. Cần Zenodo DOI (hoặc HuggingFace Datasets + DOI). Q1 gần như luôn yêu cầu persistent identifier.
+Thiếu Datasheet for Datasets (Gebru et al.) hoặc Data Statement (Bender & Friedman). Với dataset paper Q1 năm 2026, đây gần như là yêu cầu mặc định. Nên đưa vào phụ lục.
+Thiếu thống kê mô tả corpus: phân bố theo nguồn (crawl/user_report/whitelist) — bao nhiêu message mỗi nguồn?; khoảng thời gian thu thập; phân bố độ dài message; tỉ lệ có dấu / không dấu; nhà mạng; thống kê từ vựng. Reviewer sẽ hỏi tất cả.
+Chi tiết annotator: mức thù lao cụ thể (so với mức lương tối thiểu địa phương), thời gian gán nhãn, tiêu chí tuyển chọn, phân bố giới/tuổi. Cần cho ethics review.
+
+E. GIỌNG VĂN — CẦN GIẢM OVERCLAIM (Q1 phạt nặng ngôn ngữ quảng cáo)
+Hiện tại | Vấn đề | Đề xuất
+"100% semantic noise eliminated" | Đồng thuận ≠ đúng | "all flagged disagreements were resolved through adjudication"
+"actively cures label noise" | Không kiểm chứng được | "reduces observable label inconsistency"
+"empirically proves" | Quá mạnh | "provides evidence that"
+"Fleiss' Kappa is uniquely appropriate" | Sai — Krippendorff's α cũng phù hợp | "Fleiss' Kappa is suitable, as is Krippendorff's α"
+"guarantees the integrity" | Không thể đảm bảo | "increases confidence in"
+"state-of-the-art" (PhoBERT) | PhoBERT-base 2020, không còn SOTA năm 2026 | "widely used Vietnamese pre-trained encoder"

@@ -1,0 +1,61 @@
+﻿<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="LoadSpProcRibbon">
+    <ribbon startFromScratch="false">
+        <tabs>
+            <tab id="tabSpProc" insertBeforeMso="TabHome" label="Springer Proceedings Macros">
+                <group id="grTitlePage" label="Title Page" autoScale="true">
+                    <button id="btnTitle" label="Title" image="papertitle" size="large" onAction="MakeTitle" screentip="Format selected text as paper title" />
+                    <button id="btnSubtitle" label="Subtitle" image="papersubtitle" size="large" onAction="MakeSubtitle" screentip="Format selected text as paper subtitle (optional)"/>
+                    <button id="btnAuthor" label="Author" imageMso="DistributionListSelectMembers" size="large" onAction="MakeAuthor" screentip="Format selected text as paper author(s)"/>
+                    <box id="box1" boxStyle="vertical">
+              <button id="btnORCID" label="ORCID" image="ORCID" onAction="MakeORCID" screentip="Format selected text as ORCID id" supertip="Please note that ORCID ids will not be printed. In the online version they will be replaced by icons that are linked to the related ORCID pages." />
+                    <button id="btnAddress" label="Address" imageMso="MailMergeAddressBlockInsert" onAction="MakeAddress" screentip="Format selected text as affiliation (including e-mail address, URL)" />
+                    <button id="btnEmail" label="E-mail" imageMso="EnvelopesAndLabelsDialog" onAction="MakeEMail" screentip="Format selected text as e-mail address or URL (apply typewriter style)" />
+              </box>
+                    <button id="btnAbstract" label="Abstract" image="abstract" size="large" onAction="MakeAbstract" screentip="Format selected text as abstract" supertip="If not present, the word 'Abstract' is added at the beginning of the first paragraph." />
+                    <button id="btnKeywords" label="Keywords" imageMso="ReviewTrackChanges" size="large" onAction="MakeKeywords" screentip="Format selected text as keywords" supertip="If not present, the word 'Keywords' is added at the beginning of the first paragraph." />
+                </group>
+                <group id="grBasicFormats" image="lncs2" label="Basic Formats" autoScale="true">
+                    <button id="btnH1" label="H1" imageMso="PivotTableLayoutShowInOutlineForm" size="large" onAction="H1" screentip="Format selected text as heading (level 1)" />
+                    <button id="btnH2" label="H2" imageMso="PivotTableLayoutShowInCompactForm" size="large" onAction="H2" screentip="Format selected text as heading (level 2)" />
+              <button id="btnH3" label="H3" imageMso="PivotTableLayoutBlankRows" size="large" onAction="H3" screentip="Format selected text as an unnumbered heading (level 3)"/>
+                    <button id="btnH4" label="H4" imageMso="PivotTableLayoutSubtotals" size="large" onAction="H4" screentip="Format selected text as an unnumbered heading (level 4)" />
+                    <box id="box2" boxStyle="vertical">
+                       <button id="btnBullet" label="Bullet Item" image="bulletitem" onAction="MakeBulletItem" screentip="Format selected text as bullet item(s)" supertip="Please note that bullets are the default for unnumbered lists in Springer proceedings." />
+                       <button id="btnDash" label="Dash Item" image="dashitem" onAction="MakeDashItem" screentip="Format selected text as dash item(s)" supertip="Please note that bullets are the default for unnumbered lists in Springer proceedings." />
+                       <button id="btnNumbered" label="Num Item" image="numitem" onAction="MakeNumItem" screentip="Format selected text as numbered item(s)" />
+                    </box>
+                    <box id="box3" boxStyle="vertical">
+                       <button id="btnListLevelUp" label="List Level +" image="arrowright" onAction="ListLevelUp" screentip="Move the selected text one level up in the list hierarchy" supertip="This buttton can be used to create and edit nested lists (numbered and unnumbered)." />
+                       <button id="btnListLevelDown" label="List Level -" image="arrowleft" onAction="ListLevelDown" screentip="Move the selected text one level down in the list hierarchy" supertip="This buttton can be used to create and edit nested lists (numbered and unnumbered)." />
+                       <button id="btnToggleNum" label=" 1../..n.." image="togglenumbering" onAction="RestartNumbering" screentip="Toggle between restarting and continuing a numbered list" supertip="Applies to numbered lists only." />
+                    </box>
+                    <button id="btnStandard" label="Normal Text" image="normal" size="large" onAction="MakeStandard" screentip="Format the selection as normal text" supertip="This button can change both paragraph format and character style. If applied to a nonstandard paragraph, the standard paragraph format is applied. If applied to a standard paragraph, the standard character style is applied. If you want to both apply the standard paragraph format and remove a nonstandard character style, simply click on the button twice." />
+                    <box id="box4" boxStyle="vertical">
+                       <button id="btnAddSpace" label="Add Space" image="addspace" onAction="AddVerticalSpace" screentip="Add 6 pt (2.1 mm) of vertical space before the selected paragraph."/>
+                       <button id="btnClearSpace" label="Clear Space" image="removespace" onAction="ClearVerticalSpace" screentip="Clear any vertical space before and after the selected text"/>
+                       <button id="btnFootnote" label="Footnote" imageMso="FootnoteInsert" onAction="InsertFN" screentip="Add a footnote"/>
+                    </box>
+                    <button id="btnReference" label="Reference Item" imageMso="NameManager" size="large" onAction="MakeRefItem" screentip="Format selected text as reference item" />
+                </group>
+                <group id="grSpecialFormats" label="Figures, Tables, Equations" autoScale="true">
+			  <box id="box5" boxStyle="vertical">
+                       <button id="btnInsImage" label="Insert Image" image="InsertImage" onAction="InsertImage" screentip="Insert an image from a file." />
+			     <button id="btnFigure" label="Figure Caption" image="FigCaption" onAction="MakeFigCaption" screentip="Format the selected text as figure caption" supertip="Please note that the figure is numbered with an automatic counter that is updated whenever you reopen the document. A figure caption should always be positioned below the related figure." />
+			  </box>
+			  <separator id="separator1"/>	
+			  <box id="box6" boxStyle="vertical">
+			     <button id="btnTable" label="Table Caption" image="TabCaption" onAction="MakeTableCaption" screentip="Format the selected text as table caption" supertip="Please note that the table is numbered with an automatic counter that is updated whenever you reopen the document. A table caption should always be positioned above the related table." />
+		           <gallery idMso="TableInsertGallery" label="Insert Table" />
+			  </box>
+			  <separator id="separator2"/>	
+			  <button id="btnEquation" label="Displayed Equation" image="equation" size="large" onAction="MakeEquation" screentip="Format the selected text as a displayed equation" />
+              	  <button id="btnEqCounter" label="Add Eq. Number" image="eqnumber" size="large" onAction="AddEqCounter" screentip="Add an equation number to a selected equation" supertip="The equation numbering is updated whenever you open the document" />
+                    <button id="btnProgcode" label="Prog. Code" imageMso="CreateStoredProcedure" size="large" onAction="MakeProgCode" screentip="Format the selected text as program code (typewriter style)" />
+                </group>
+            <group id="grRestoreTemplate" label="Template" autoScale="true">
+              <button id="btnRestTemplate" label="Check Styles" imageMso="AccessThemesGallery" size="large" onAction="RestoreSettings" screentip="Restore all styles" supertip="Use this button if the original template styles might have been altered or deleted." />
+                </group>
+            </tab>
+        </tabs>
+    </ribbon>
+</customUI>

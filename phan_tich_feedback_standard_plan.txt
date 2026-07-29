@@ -1,0 +1,138 @@
+====================================================================================================
+KẾ HOẠCH TIÊU CHUẨN VÀ PHÂN TÍCH LÕI PHẢN HỒI PHẢN BIỆN (STANDARD PLAN FOR Q1 REVISION)
+Bài báo: "Research and Construction of a Vietnamese Phishing SMS Dataset for Machine Learning Applications"
+====================================================================================================
+
+Tài liệu này đóng vai trò là KHUNG KẾ HOẠCH TIÊU CHUẨN (Standard Master Plan) tổng hợp, phân tích bản chất lỗi và nhóm các định hướng chỉnh sửa bài báo theo các tiêu chuẩn khắt khe nhất của các tạp chí Q1 uy tín (như LREC/LRE, ACM TALLIP, PeerJ Computer Science).
+
+====================================================================================================
+1. ĐÁNH GIÁ TỔNG QUAN VÀ NGUY CƠ DESK-REJECT
+====================================================================================================
+Bài báo v1.5 dù đã có bộ khung thực nghiệm tương đối rõ ràng nhưng vẫn có nguy cơ bị Desk-Reject (từ chối ngay từ vòng sơ loại) tại các tạp chí Q1 do 3 điểm nghẽn chiến lược:
+  1. Lỗi kỹ thuật / công thức toán và mâu thuẫn số liệu thô ngay trong bài (Blocking Errors).
+  2. Đóng góp khoa học chưa được chứng minh bằng thực nghiệm đối chứng mạnh (Unproven Scientific Claim).
+  3. Quy mô dataset nhỏ hơn 3 lần so với baseline cũ (Pham & Le-Hong 2016) nhưng chưa chứng minh được "Chất lượng vượt trội Số lượng".
+
+====================================================================================================
+2. PHÂN NHÓM VẤN ĐỀ VÀ PHÂN TÍCH NGUYÊN NHÂN GỐC RỄ
+====================================================================================================
+
+----------------------------------------------------------------------------------------------------
+NHÓM A: LỖI BẮT BUỘC SỬA KỸ THUẬT VÀ MÂU THUẪN DỮ LIỆU (BLOCKING TECHNICAL ERRORS)
+----------------------------------------------------------------------------------------------------
+[A1] Công thức F1-Score bị viết sai (Phương trình Eq. 3):
+     - Hiện trạng: Phương trình (3) trong bài ghi F1 = (2 * Precision * Recall) / (Precision * Recall). Mẫu số bị gõ nhầm phép nhân thay vì phép cộng (Precision + Recall).
+     - Ảnh hưởng: Đây là lỗi cơ bản khiến reviewer nghi ngờ tính cẩn trọng và tính chính xác của toàn bộ kết quả thực nghiệm.
+     - Hành động chuẩn hóa: Sửa lại công thức chuẩn: F1 = (2 * Precision * Recall) / (Precision + Recall).
+
+[A2] Mâu thuẫn số liệu thô và đứt gãy truy vết (Data Traceability Failure):
+     - Hiện trạng:
+       + Trong Table 3 (mô tả gold_standard.csv) ghi "1,763 fully adjudicated messages", trong khi toàn bài (Abstract, §4.3, §4.4.2, Conclusion) khẳng định 2,007 tin.
+       + Hình 3 (Fig. 3) vẽ từ dữ liệu thô cũ (10/10 HAM 1260, SPAM 467 = 1,727) mâu thuẫn với Table 7 và văn bản (1,259 HAM, 704 SPAM = 1,963).
+       + Dữ liệu schema Table 4 bị lệch kiểu (message_id ghi Integer nhưng ví dụ ghi String 'COM_001'; source ghi crawl, user_report, whitelist nhưng ví dụ ghi 'internet').
+       + Các file gold_standard.csv và benchmark_subset.csv thiếu thuộc tính `message_id`, làm đứt gãy khả năng truy vết ngược về ma trận bỏ phiếu metadata_distribution.json.
+     - Hành động chuẩn hóa: 
+       + Dựng một bảng Luồng dữ liệu thống nhất: Raw (2,058) -> Loại bỏ nhiễu (-51) -> Gold Standard (2,007) -> Loại trùng lặp (-466) -> Unique Benchmark (1,541).
+       + Trích xuất dữ liệu thực tế vẽ lại Fig. 3 bằng kịch bản code tự động.
+       + Thêm thuộc tính `message_id` vào toàn bộ các phân đoạn CSV để đảm bảo tính liên kết dữ liệu.
+
+[A3] Rò rỉ thông tin trong lựa chọn mô hình (Model Selection Leakage):
+     - Hiện trạng: PhoBERT ghi `load_best_model_at_end=True` và chọn epoch dựa trên F1-score cao nhất trên tập kiểm thử (test fold) trong quá trình 5-fold CV.
+     - Ảnh hưởng: Kết quả 97.99% bị optimistically biased (lạc quan hóa do rò rỉ dữ liệu test vào model selection).
+     - Hành động chuẩn hóa: Áp dụng Nested Cross-Validation hoặc phân tách 80/10/10 (Train / Validation / Test) trong từng fold. Dùng tập Validation để chọn epoch, sau đó mới báo cáo hiệu năng trên tập Test độc lập.
+
+[A4] Lỗi dẫn chiếu chéo (Cross-referencing Errors) và Lặp văn bản (A5):
+     - Hiện trạng: Văn bản trỏ sai mục (§4.1 trỏ về §2 thay vì §3.3; §4.3 trỏ về Table 7 thay vì Table 9; Table 3 trỏ thành Table 4; Ref [2] Viettel không được cite trong bài; §3.3 bị lặp nguyên văn một đoạn về quy tắc quyết định).
+     - Hành động chuẩn hóa: Rà soát và chỉnh sửa triệt để toàn bộ hệ thống tham chiếu, xóa bỏ các đoạn văn bị trùng lặp.
+
+----------------------------------------------------------------------------------------------------
+NHÓM B: CỦNG CỐ ĐÓNG GÓP KHOA HỌC VÀ ĐỘNG CƠ DỮ LIỆU (SCIENTIFIC CONTRIBUTION & MOTIVATION)
+----------------------------------------------------------------------------------------------------
+[B1] Biện minh quy mô Dataset nhỏ hơn baseline bằng thực nghiệm (Cross-Dataset Evaluation):
+     - Vấn đề: Dataset đề xuất (2,007 / 1,541 unique) nhỏ hơn 3 lần so với dataset Pham & Le-Hong 2016 (6,599 records).
+     - Giải pháp thực nghiệm: 
+       + Thực hiện đánh giá chéo tập dữ liệu (Cross-dataset experiment 2x2): Train trên dataset Ours -> Test trên Pham & Le-Hong và ngược lại. Chứng minh mô hình train trên dữ liệu sạch của bài báo có khả năng tổng quát hóa (generalization) tốt hơn.
+       + Audit nhãn ngẫu nhiên 300–500 bản ghi của corpus cũ bằng 10 annotators để định lượng tỷ lệ nhiễu nhãn (label noise) của dataset cũ.
+
+[B2] Chứng minh giá trị của Khung QA và Quy trình Phân xử Bất đồng (Ablation Study):
+     - Vấn đề: Tỷ lệ bất đồng ban đầu chỉ 44/2,007 tin (2.19%), reviewer sẽ nghi ngờ hiệu quả của quy trình Adjudication so với Majority Voting đơn giản.
+     - Giải pháp thực nghiệm:
+       + Chạy thực nghiệm so sánh (Ablation): Train mô hình trên nhãn Majority Vote vs nhãn Gold Adjudicated trên cùng tập test.
+       + Đưa ra phát hiện định tính mạnh: Trong 44 ca bất đồng, Majority Vote nghiêng về Spam ở 36 ca, nhưng sau phân xử chuyên sâu (Adjudication) kết quả đảo ngược thành 27 Ham / 17 Spam. Đây là bằng chứng thực tế khẳng định Majority Vote đơn thuần bị thiên lệch từ khóa.
+
+[B3] Khai thác Taxonomy 3 lớp (Commercial Spam vs Phishing Spam):
+     - Vấn đề: Tiêu đề nhắc đến "Phishing" và bài định nghĩa 3 lớp ngữ nghĩa, nhưng dữ liệu công bố lại gộp về nhị phân (Binary).
+     - Giải pháp: Cung cấp nhãn 3 lớp (Ham / Commercial Spam / Phishing Spam) trong kho dữ liệu phát hành để tăng tối đa giá trị nghiên cứu cho cộng đồng và biện minh cho tiêu đề.
+
+[B4] Chuẩn hóa thống kê Fleiss' Kappa và Minh bạch Nhân sự Adjudication (B5):
+     - Bổ sung chỉ số Krippendorff's alpha và Gwet's AC1 cùng khoảng tin cậy Bootstrap CI cho Fleiss' Kappa để tránh hiện tượng "Kappa Paradox".
+     - Báo cáo thống kê chỉ số đồng thuận theo từng người dán nhãn (per-annotator agreement) và theo từng lớp.
+     - Mô tả rõ ràng nhân sự tham gia phân xử (Adjudicators): số lượng, quy trình (blind hay open), cam kết tính khách quan (tránh xung đột lợi ích Conflict of Interest).
+
+----------------------------------------------------------------------------------------------------
+NHÓM C: THỰC NGHIỆM VÀ KỸ THUẬT BỔ SUNG (ADVANCED BENCHMARKING EXPERIMENTS)
+----------------------------------------------------------------------------------------------------
+[C1] Kiểm định ý nghĩa thống kê (Statistical Significance Testing): Chạy McNemar Test hoặc Wilcoxon Signed-Rank Test kèm hiệu chỉnh Bonferroni/Holm để khẳng định sự khác biệt hiệu năng giữa PhoBERT và SVM-RBF có ý nghĩa thống kê.
+[C2] Huấn luyện Multi-Seed: Báo cáo trung bình và độ lệch chuẩn qua ít nhất 5 seed ngẫu nhiên cho PhoBERT và MLP để đo độ ổn định mô hình.
+[C3] Thêm Baselines hội nhập 2026: Đánh giá bổ sung các mô hình ViSoBERT (tối ưu cho văn bản mạng xã hội nhiễu/teencode), XLM-RoBERTa, mBERT.
+[C4] Thử nghiệm Baseline LLMs Zero-Shot / Few-Shot: Đánh giá hiệu năng của các mô hình LLM lớn (như GPT-4, Gemini, Qwen/Llama) dưới dạng zero-shot prompt để làm mốc đối sánh chuẩn mực năm 2026.
+[C5] Bổ sung đặc trưng TF-IDF Character n-gram (3–5 grams): Đánh giá đặc trưng chuỗi ký tự (hiệu quả cao với teencode và từ không dấu).
+[C6] Đánh giá GroupKFold CV vs Deduplication: So sánh giữa việc xóa 466 tin trùng lặp với việc giữ nguyên dữ liệu nhưng chia fold theo cụm trùng lặp (GroupKFold).
+[C7] Phân tích độ nhạy (Sensitivity Analysis): Đánh giá ảnh hưởng của ngưỡng Jaccard tại các mức J ∈ {0.7, 0.8, 0.85, 0.9, 0.95}.
+[C8] Đánh giá Temporal / Out-Of-Distribution (OOD): Giữ riêng các tin nhắn thu thập giai đoạn muộn nhất làm tập kiểm thử OOD thời gian.
+[C9] Phân tích lỗi định tính (Error Analysis & Confusion Matrix): Thêm ma trận nhầm lẫn và phân tích sâu các ca dự đoán sai tiêu biểu.
+[C10] Làm rõ kỹ thuật Tiền xử lý văn bản: Mô tả chính xác quy trình tách từ cho PhoBERT (VnCoreNLP vs PyVi) và thảo luận về hiện tượng Domain Mismatch (PhoBERT pretrain trên tiếng Việt có dấu vs SMS không dấu).
+
+----------------------------------------------------------------------------------------------------
+NHÓM D: CHUẨN MỰC ĐẠO ĐỨC, PHÁP LÝ VÀ MINH BẠCH DỮ LIỆU (ETHICS, LEGAL & REPRODUCIBILITY)
+----------------------------------------------------------------------------------------------------
+[D1] Phê duyệt Đạo đức (IRB Approval): Khai báo rõ phê duyệt từ Hội đồng Đạo đức Nghiên cứu hoặc tuyên bố miễn trừ chính thức.
+[D2] Quy trình Consent: Mô tả chi tiết quy trình xin phép người dùng và mẫu chấp thuận (Consent Form).
+[D3] Kiểm chứng Ẩn danh PII: Báo cáo kết quả audit thủ công trên mẫu ngẫu nhiên 200 tin nhắn để đo tỷ lệ PII sót.
+[D4] Pháp lý Dữ liệu Crawl: Giải thích tính hợp pháp và tuân thủ Điều khoản dịch vụ (ToS) khi thu thập dữ liệu mở.
+[D5] Mã định danh cố định (Persistent Identifier / Zenodo DOI): Phát hành kho dữ liệu lên Zenodo/HuggingFace để lấy mã DOI cố định thay vì chỉ dẫn liên kết thư mục cục bộ.
+[D6] Phụ lục Datasheet for Datasets: Bổ sung biểu mẫu Datasheet for Datasets (Gebru et al.) ở phần Phụ lục.
+[D7] Thống kê mô tả chi tiết Corpus: Bổ sung bảng biểu thống kê chi tiết tỷ lệ 4 nguồn, phân bố độ dài, tỷ lệ có dấu/không dấu, danh sách nhà mạng.
+[D8] Chi tiết về Người dán nhãn: Báo cáo mức thù lao cụ thể, độ tuổi, giới tính, thời gian dán nhãn để đáp ứng tiêu chí Ethics Review.
+
+----------------------------------------------------------------------------------------------------
+NHÓM E: CHUẨN HÓA GIỌNG VĂN HỌC THUẬT VÀ GIẢM THIỂU OVERCLAIM (ACADEMIC TONE & DE-OVERCLAIMING)
+----------------------------------------------------------------------------------------------------
+Các tạp chí Q1 phạt rất nặng ngôn ngữ mang tính "quảng cáo / khẳng định quá đà" (overclaim). Cần rà soát và thay thế toàn bộ các cụm từ khẳng định tuyệt đối bằng thuật ngữ khoa học khiêm tốn, chính xác:
+
++-------------------------------------------+-----------------------------------+------------------------------------------------------------------+
+| Cụm từ hiện tại trong bài                 | Vấn đề học thuật                  | Cụm từ thay thế đề xuất chuẩn Q1                                 |
++-------------------------------------------+-----------------------------------+------------------------------------------------------------------+
+| "100% semantic noise eliminated"          | Bị overclaim (Đồng thuận ≠ Đúng)  | "all flagged disagreements were resolved through adjudication"   |
+| "actively cures label noise"              | Không thể kiểm chứng tuyệt đối    | "reduces observable label inconsistency"                         |
+| "empirically proves"                      | Ngôn ngữ quá mạnh/khẳng định tuyệt đối| "provides evidence that"                                     |
+| "Fleiss' Kappa is uniquely appropriate"   | Không chính xác (Krippendorff's α cũng phù hợp) | "Fleiss' Kappa is suitable, as is Krippendorff's α"  |
+| "guarantees the integrity"                | Không thể đảm bảo tuyệt đối       | "increases confidence in"                                        |
+| "state-of-the-art" (dùng cho PhoBERT)     | PhoBERT (2020) không còn là SOTA năm 2026 | "widely used Vietnamese pre-trained encoder"              |
++-------------------------------------------+-----------------------------------+------------------------------------------------------------------+
+
+====================================================================================================
+3. LỘ TRÌNH VÀ KẾ HOẠCH HÀNH ĐỘNG TIÊU CHUẨN (STANDARD ACTION ROADMAP)
+====================================================================================================
+
+Giai đoạn 1: Chuẩn hóa Dữ liệu & Khắc phục Lỗi Kỹ thuật cốt lõi (Hoàn thành Nhóm A & D5)
+  - Bước 1.1: Tạo script tự động kiểm tra và làm sạch ma trận dữ liệu thô. Dựng bảng Luồng dữ liệu chuẩn (2,058 -> 2,007 -> 1,541).
+  - Bước 1.2: Cập nhật `message_id` cho tất cả các file CSV để đảm bảo tính liên kết dữ liệu hoàn hảo.
+  - Bước 1.3: Sửa công thức toán F1-Score (Eq. 3) và sửa toàn bộ tham chiếu cross-referencing bị lệch trong văn bản.
+  - Bước 1.4: Đóng gói repository lên Zenodo/HuggingFace để lấy mã DOI chính thức.
+
+Giai đoạn 2: Bổ sung Thực nghiệm Khoa học & Mô hình hóa Nâng cao (Hoàn thành Nhóm B & C)
+  - Bước 2.1: Cài đặt quy trình Nested CV (80/10/10) để loại bỏ rò rỉ dữ liệu test trong model selection.
+  - Bước 2.2: Chạy các mô hình baselines bổ sung (ViSoBERT, XLM-R, LLM Zero-shot, Character n-gram).
+  - Bước 2.3: Thực hiện thí nghiệm Ablation (Majority Vote vs Adjudicated Gold) và Cross-dataset Evaluation với corpus cũ.
+  - Bước 2.4: Tính toán kiểm định ý nghĩa thống kê (McNemar/Wilcoxon) và các chỉ số thống kê dán nhãn bổ sung (Krippendorff's alpha, Gwet's AC1, Bootstrap CI).
+
+Giai đoạn 3: Rà soát Giọng văn, Hoàn thiện Phụ lục & Hồ sơ Đạo đức (Hoàn thành Nhóm B3, B5, D1-D8 & E)
+  - Bước 3.1: Rà soát toàn văn bài báo và thay thế toàn bộ ngôn ngữ khẳng định quá đà (Overclaim) theo Bảng chuẩn Nhóm E.
+  - Bước 3.2: Viết mới phần Phụ lục (Datasheet for Datasets & Phân tích lỗi định tính).
+  - Bước 3.3: Bổ sung tuyên bố IRB, quy trình Consent, audit PII và thông tin chi tiết về thù lao/nhân sự dán nhãn.
+  - Bước 3.4: Cập nhật lại toàn bộ báo cáo kết quả thực nghiệm và thảo luận khoa học trong văn bản chính.
+
+====================================================================================================
+Tài liệu này được lưu trữ làm Chuẩn mực Kế hoạch (Standard Plan) cho các bước triển khai tiếp theo.
+====================================================================================================

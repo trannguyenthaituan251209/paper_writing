@@ -1,0 +1,268 @@
+Nghiên cứu và Xây dựng Tập dữ liệu Tin nhắn Phishing tiếng Việt cho các Ứng dụng Học máy
+
+Tóm tắt. Sự khan hiếm của các tập dữ liệu chuẩn (benchmark) chất lượng cao và được xác minh minh bạch đang gây nghẽn nghiêm trọng cho việc phát triển các hệ thống thông minh phát hiện tin nhắn SMS rác và lừa đảo bằng tiếng Việt. Nhằm giải quyết vấn đề nhiễu nhãn và khả năng tái lập kém trong các ngữ liệu hiện có, bài báo này giới thiệu một quy trình xây dựng tập dữ liệu đảm bảo chất lượng, tích hợp khung kiểm định đa người gán nhãn và quy trình giải quyết bất đồng có cấu trúc. Trong giai đoạn hiện tại của dự án, 2.058 tin nhắn thô đã được thu thập từ nhiều nguồn khác nhau, trong đó có 2.007 tin nhắn đã hoàn thành thành công toàn bộ quy trình đánh giá. Trước khi tiến hành phân xử chính thức, giai đoạn dán nhãn độc lập với sự tham gia của 10 người dán nhãn đã đạt chỉ số Fleiss' Kappa tổng thể là 0,9856, thể hiện độ đồng thuận nền tảng gần như tuyệt đối và khẳng định tính vững chắc của quy định dán nhãn được đề xuất. Trước khi đánh giá mô hình, một giai đoạn lọc trùng lặp gần (near-duplicate) bổ sung đã được thực hiện nhằm loại bỏ các mẫu tin nhắn lặp lại xuất phát từ cả các chiến dịch spam hàng loạt và các thông báo giao dịch tự động (như biến động số dư ngân hàng và mã OTP) có thể gây rò rỉ dữ liệu giữa tập huấn luyện và tập kiểm thử trong kiểm thử chéo. Quy trình này đã tạo ra một tập dữ liệu thực nghiệm gồm 1.541 tin nhắn duy nhất phục vụ đánh giá mô hình bằng phương pháp kiểm thử chéo 5 phần phân tầng (stratified 5-fold cross-validation).
+
+Từ khóa: Tập dữ liệu SMS tiếng Việt, Phát hiện SMS Spam, Lọc tin nhắn rác, Xây dựng tập dữ liệu, Quy định dán nhãn, Nhãn chuẩn (Gold Label), Độ đồng thuận giữa người dán nhãn, Fleiss' Kappa.
+
+1 Giới thiệu
+Dịch vụ tin nhắn ngắn (SMS) vẫn là một kênh truyền thông thiết yếu tại Việt Nam cho các dịch vụ ngân hàng, cơ quan nhà nước và giao dịch thương mại. Theo DataReportal, Việt Nam ghi nhận khoảng 137 triệu thuê bao di động vào năm 2026, vượt đáng kể dân số quốc gia và phản ánh sự phổ biến rộng rãi của các dịch vụ di động [1]. Tuy nhiên, sự phổ biến này cũng dẫn đến sự gia tăng liên tục của tin nhắn rác SMS, tạo ra những thách thức lớn về an toàn thông tin. Tại Việt Nam, thống kê chính thức từ Cục An toàn thông tin (Bộ Thông tin và Truyền thông) cho biết các nhà mạng di động đã được yêu cầu ngăn chặn hơn 9,6 triệu tin nhắn rác chỉ trong một tuần dịp Tết Nguyên đán 2022 [4]. Kẻ tấn công ngày càng áp dụng các kỹ thuật thao túng tâm lý (social engineering) tinh vi, mạo danh ngân hàng và các tổ chức uy tín để lừa người dùng tiết lộ thông tin nhạy cảm [3, 4]. Do đó, việc phát triển các hệ thống phát hiện tự động đáng tin cậy đã thu hút sự quan tâm lớn từ cả giới nghiên cứu lẫn công nghiệp.
+
+Mặc dù đã có những tiến bộ đáng kể trong phân loại SMS tiếng Việt, sự sẵn có của các tập dữ liệu benchmark chất lượng cao vẫn còn rất hạn chế. Hầu hết các ngữ liệu công khai hiện có, như SMS Spam Collection [6], được phát triển cho tiếng Anh và không đại diện cho các sắc thái ngôn ngữ, từ viết tắt địa phương, hoặc các mẫu lừa đảo đặc thù ở Việt Nam. Hơn nữa, các tập dữ liệu khu vực hiện có thường bị giới hạn về quy mô, mang tính đóng độc quyền, hoặc thiếu tài liệu minh bạch về kiểm soát chất lượng dán nhãn. Nhiều tập dữ liệu thiếu quy trình giải quyết bất đồng rõ ràng, làm giảm khả năng tái lập, độ nhất quán nhãn và giá trị nghiên cứu lâu dài [7].
+
+Để giải quyết những hạn chế này, bài báo này trình bày một khung làm việc minh bạch, đảm bảo chất lượng cho việc xây dựng tập dữ liệu SMS tiếng Việt. Thay vì chỉ dựa vào cơ chế bỏ phiếu đa số đơn giản, phương pháp của chúng tôi ưu tiên tính toàn vẹn của gán nhãn bằng cách kết hợp gán nhãn độc lập từ nhiều người với quy trình xác minh hai giai đoạn để thiết lập Nhãn chuẩn (Gold Label) độ chính xác cao. Các tin nhắn đạt được sự đồng thuận tuyệt đối giữa 10 người dán nhãn độc lập sẽ được tích hợp trực tiếp, trong khi các trường hợp bất đồng sẽ trải qua quy trình xem xét hợp tác và phân tích nguyên nhân gốc rễ. Hiện tại, khung làm việc đã xử lý 2.058 tin nhắn, xác minh thành công và hoàn thiện tập dữ liệu nền tảng gồm 2.007 tin nhắn SMS tiếng Việt chất lượng cao phục vụ cho nghiên cứu học máy.
+
+Do các chiến dịch lừa đảo thường tạo ra hàng trăm mẫu tin nhắn tương tự chỉ khác nhau ở các trường dữ liệu động (như URL, số điện thoại, số tài khoản), một giai đoạn lọc trùng lặp gần đã được đưa vào trước khi đánh giá mô hình nhằm tránh việc ước tính hiệu năng quá lạc quan.
+
+2 Nghiên cứu liên quan
+Mặc dù đã có nhiều nỗ lực xây dựng các ngữ liệu chuẩn, các tập dữ liệu hiện có vẫn bộc lộ những hạn chế đáng kể về tính minh bạch trong gán nhãn và kiểm soát chất lượng. Ví dụ, tập dữ liệu SMS Spam Collection v.1 cho tiếng Anh (Almeida et al. [6]) và các tập dữ liệu tiếng Việt trước đây do Phạm & Lê-Hồng (2016) [3] và Tuấn et al. (2023) [4] đề xuất chủ yếu dựa vào tổng hợp thủ công hoặc cơ chế bỏ phiếu chưa rõ ràng. Cụ thể, Tuấn et al. [4] đã đánh giá các mô hình học máy truyền thống (SVM, Naive Bayes, Random Forests) cùng các kiến trúc học sâu (CNN, LSTM) kết hợp nhúng từ PhoBERT trên ba biến thể tập dữ liệu tiếng Việt (đầy đủ dấu, không dấu và hỗn hợp). Họ đã chứng minh rằng mô hình LSTM kết hợp PhoBERT đạt độ chính xác cao 97,77% trên văn bản đầy đủ dấu, trong khi CNN đạt 95,56% trên văn bản không dấu [4]. Tuy nhiên, các nghiên cứu trước đây không báo cáo chỉ số Độ đồng thuận giữa người dán nhãn (IAA) chính thức hay quy trình giải quyết bất đồng có cấu trúc, và ngữ liệu của họ phụ thuộc vào chuyển đổi dấu nhân tạo thay vì phân xử từ nhiều người gán nhãn. Hơn nữa, các tập dữ liệu khu vực hiện có thường giữ kín, hạn chế truy cập, hoặc thiếu quy định dán nhãn công khai và cơ chế bảo vệ rò rỉ dữ liệu do trùng lặp gần. Khác biệt với các nghiên cứu trước, tập dữ liệu được đề xuất của chúng tôi giải quyết trực tiếp các khoảng trống này bằng cách thiết lập khung làm việc đa người gán nhãn nghiêm ngặt (đạt Fleiss' Kappa 0,9856), kho lưu trữ mở đi kèm quy định dán nhãn công khai, và quy trình khử trùng lặp nghiêm ngặt trước khi đánh giá mô hình.
+
+Bảng 1. So sánh tập dữ liệu được đề xuất với các tập dữ liệu SMS spam hiện có.
++-----------------------------------+------------+-------------------------------+----------+-------------------------------------------------------------+----------------------+----------------------------------------+
+| Tập dữ liệu                       | Ngôn ngữ   | Quy mô (Bản ghi)              | Phân loại| Quy trình gán nhãn & Chỉ số IAA                             | Công khai Guideline  | Tính sẵn có công khai                  |
++-----------------------------------+------------+-------------------------------+----------+-------------------------------------------------------------+----------------------+----------------------------------------+
+| SMS Spam Collection v.1 [6]       | Tiếng Anh  | 5.574                         | Ham/Spam | Không xác định / Không báo cáo                              | Không                | Có                                     |
+| Phạm & Lê-Hồng (2016) [3]         | Tiếng Việt | 6.599                         | Ham/Spam | 1 người dán nhãn / Không báo cáo                            | Không                | Theo yêu cầu                           |
+| Tuấn et al. (2023) [4]            | Tiếng Việt | Không xác định (Dữ liệu đóng) | Ham/Spam | Bỏ phiếu đa số / Không báo cáo                              | Không                | Dữ liệu đóng                           |
+| Tập dữ liệu đề xuất (Ours)        | Tiếng Việt | 2.007 (Gold) / 1.541 (Unique) | Ham/Spam | 10 người dán nhãn độc lập + Phân xử (Fleiss' Kappa = 0,9856)| Có (File PDF công khai)| Đầy đủ (Ẩn danh PII + Kho mở)         |
++-----------------------------------+------------+-------------------------------+----------+-------------------------------------------------------------+----------------------+----------------------------------------+
+
+3 Khung Xây dựng Tập dữ liệu Đề xuất
+
+3.1 Khung Tổng thể
+Hình 1. Quy trình tổng thể của khung xây dựng tập dữ liệu SMS tiếng Việt đảm bảo chất lượng được đề xuất.
+
+Mục tiêu chính của nghiên cứu này không chỉ là xây dựng một tập dữ liệu SMS tiếng Việt mà còn thiết lập một khung dán nhãn đảm bảo chất lượng và có khả năng tái lập để tạo ra nhãn chuẩn đáng tin cậy. Thay vì coi dán nhãn là hoạt động gán nhãn một lần, khung làm việc đề xuất tích hợp việc cải tiến chất lượng liên tục trong suốt quá trình xây dựng dữ liệu. Quy trình tổng thể được minh họa trong Hình 1.
+
+Khung làm việc đề xuất gồm bốn giai đoạn chính: Thu thập dữ liệu SMS, Chuẩn bị dán nhãn, Dán nhãn độc lập từ nhiều người, và Đảm bảo chất lượng lặp. Các tin nhắn SMS trước tiên được thu thập từ nhiều nguồn khác nhau và được lọc theo các tiêu chí đưa vào và loại trừ đã định trước. Trước khi dán nhãn, tất cả người dán nhãn đều được cung cấp Quy định Dán nhãn chuẩn hóa để đảm bảo hiểu biết chung về mục tiêu và quy tắc quyết định.
+
+Lấy cảm hứng từ quy trình giải quyết bất đồng có hệ thống của Oortwijn et al. [7], khung làm việc xem các bất đồng dán nhãn là dấu hiệu của các vấn đề chất lượng tiềm ẩn chứ không đơn thuần là lỗi cá nhân. Do đó, mỗi bất đồng được phân tích để xác định nguyên nhân gốc rễ, bao gồm quy định mơ hồ, sự lệch lạc khái niệm giữa các người dán nhãn, hành vi dán nhãn không nhất quán, hoặc sai sót cá nhân. Các hành động khắc phục phù hợp (như hoàn thiện quy định, huấn luyện lại người dán nhãn, hoặc dán nhãn lại) sau đó được thực hiện trước khi tin nhắn được đánh giá lại qua quy trình xác minh.
+
+Khác với quy trình truyền thống, khung làm việc thiết lập cơ chế đảm bảo chất lượng vòng lặp kín, trong đó phân tích bất đồng liên tục cải thiện cả quy định dán nhãn lẫn độ nhất quán của người dán nhãn. Quy trình lặp này nhằm tối đa hóa độ tin cậy của nhãn trong khi đảm bảo tập dữ liệu thu được luôn minh bạch, tái lập và phù hợp cho các nghiên cứu học máy và xử lý ngôn ngữ tự nhiên sau này.
+
+3.2 Thu thập SMS
+Chất lượng của một tập dữ liệu học máy phụ thuộc lớn vào tính đa dạng, độ chân thực và tính đại diện của các nguồn dữ liệu. Do đó, tập dữ liệu đề xuất được xây dựng bằng cách thu thập tin nhắn SMS tiếng Việt từ bốn kênh chính thay vì phụ thuộc vào một kênh duy nhất nhằm tăng tính đa dạng ngôn ngữ và giảm thiên lệch mẫu.
+
+Hình 2. Quy trình thu thập dữ liệu SMS.
+
+Như minh họa trong Hình 2, tin nhắn SMS được thu thập từ bốn kênh chính: đóng góp cộng đồng, đóng góp từ tình nguyện viên, tài nguyên trực tuyến công khai và các tổ chức đối tác. Trong schema tập dữ liệu (Bảng 4), các nguồn này được ánh xạ thành ba thuộc tính phân loại chuẩn hóa: crawl (tài nguyên trực tuyến), user_report (đóng góp cộng đồng và tình nguyện viên), và whitelist (tổ chức đối tác). Các đóng góp từ cộng đồng và tình nguyện viên cung cấp các tin nhắn thực tế nhận được trong cuộc sống hàng ngày, giúp tập dữ liệu bắt được các chiến dịch lừa đảo hiện đại, quảng cáo, thông báo tài chính và tin nhắn cá nhân hợp lệ.
+
+Để bảo vệ quyền riêng tư người dùng, tất cả tin nhắn thu thập được đều trải qua quy trình ẩn danh trước khi dán nhãn. Thông tin định danh cá nhân (PII), bao gồm số điện thoại, tên riêng, số CMND/CCCD, tài khoản ngân hàng, URL và các nội dung nhạy cảm khác, đã được xóa hoặc thay thế bằng các từ giữ chỗ chuẩn hóa (như [PHONE], [URL], [NAME]) trong khi vẫn bảo toàn đặc trưng ngữ nghĩa cần thiết cho gán nhãn và huấn luyện mô hình.
+
+Để đảm bảo chất lượng dữ liệu cao và loại bỏ nhiễu trước giai đoạn dán nhãn chính thức, một quy trình sàng lọc nghiêm ngặt kết hợp kịch bản tự động và kiểm tra thủ công đã được thực hiện. Trong số 2.058 tin nhắn thô ban đầu, tổng cộng 51 tin nhắn (2,48%) đã bị loại bỏ dựa trên tiêu chí lọc kỹ thuật và ngữ nghĩa nêu trong Bảng 2. Đầu tiên, một kịch bản Python tự động thực hiện khử trùng lặp chính xác, loại bỏ 23 biến thể tin nhắn lặp do các chiến dịch spam hàng loạt. Thứ hai, quy trình xác minh thủ công hai lượt được thực hiện để loại bỏ 9 tin nhắn bị lỗi cấu trúc nghiêm trọng (như văn bản bị cắt cụt, lỗi mã hóa) và 19 tin nhắn không đủ thông tin ngữ nghĩa sau ẩn danh PII. Quy trình sàng lọc lai này đảm bảo giai đoạn đánh giá đa người gán nhãn tiếp theo hoạt động hoàn toàn trên ngữ liệu sạch và linguistically viable.
+
+Bảng 2. Phân tích định lượng các tin nhắn bị loại trong giai đoạn làm sạch và lọc dữ liệu.
++---------------------------------------------------------------------------------------------------------------------------------------------------+----------+
+| Lý do loại bỏ                                                                                                                                     | Số tin   |
++---------------------------------------------------------------------------------------------------------------------------------------------------+----------+
+| Trùng lặp chính xác (Duplicate)                                                                                                                    | 23       |
+| Hỏng cấu trúc nghiêm trọng (văn bản bị cắt cụt do lỗi ghi log hệ thống hoặc lỗi mã hóa ký tự không thể khôi phục)                                 | 9        |
+| Chứa không đủ thông tin ngữ nghĩa sau ẩn danh (ví dụ: tin nhắn bị xóa hết từ ngữ quan trọng hoặc chỉ chứa mã OTP số rời rạc)                       | 19       |
++---------------------------------------------------------------------------------------------------------------------------------------------------+----------+
+
+3.3 Quy định Dán nhãn (Annotation Guideline)
+Nhằm giảm thiểu tính chủ quan và nâng cao độ nhất quán gán nhãn, một Quy định Dán nhãn chuẩn hóa đã được xây dựng trước quá trình dán nhãn. Quy định thiết lập một khung quyết định thống nhất bằng cách định nghĩa mục tiêu dán nhãn, định nghĩa nhãn, quy tắc quyết định và các ví dụ minh họa. Tất cả người dán nhãn đều phải học kỹ quy định trước khi tham gia.
+
+Quy định phân loại tin nhắn SMS thành hai lớp chính: Ham và Spam. Tin nhắn Ham là các truyền thông hợp lệ, bao gồm hội thoại cá nhân, thông báo giao dịch quan trọng, tin nhắn xác thực chính thức và thông báo dịch vụ không có ý đồ lừa đảo hay thao túng người nhận.
+
+Spam được định nghĩa là một danh mục rộng bao gồm hai danh mục con ngữ nghĩa: Commercial Spam (quảng cáo thương mại không mong muốn) và Fraudulent/Phishing Spam (lừa đảo/mạo danh, các kịch bản gian lận tài chính, tin nhắn độc hại nhằm đánh cắp thông tin hoặc tài sản).
+
+Đối với bài toán phân loại nhị phân cơ sở, cả hai danh mục con đều được gán cùng một nhãn Spam. Thiết kế này phản ánh mục tiêu xây dựng tập dữ liệu phát hiện SMS spam nhị phân trong khi vẫn lưu giữ phân biệt ngữ nghĩa tinh tế trong quy định cho các phân tích mở rộng sau này.
+
+Quy định cũng giải quyết các sắc thái ngôn ngữ đặc thù trong SMS tiếng Việt. Như quan sát của Tuấn et al. [4], kẻ phát tán spam ưu tiên sử dụng tiếng Việt không dấu để vượt qua giới hạn ký tự và giảm chi phí truyền tin trong khi vẫn đảm bảo người đọc hiểu được. Quy định của chúng tôi tích hợp các quy tắc chuẩn hóa (như ánh xạ các biến thể quảng cáo 'quảng cáo', 'quang cao', '[QC]' về một dạng biểu diễn token thống nhất [4]) và đưa ra các quy tắc phân xử cho các trường hợp mơ hồ. Người dán nhãn được hướng dẫn đánh giá từng tin nhắn dựa trên ý đồ truyền thông, ngữ cảnh và rủi ro an ninh tiềm ẩn thay vì chỉ dựa vào các từ khóa cô lập.
+
+ các ví dụ đại diện và các bẫy gán nhãn phổ biến phát hiện trong các vòng dán nhãn sơ bộ đã được đưa vào quy định để nâng cao độ nhất quán giữa các người gán nhãn. Trong giai đoạn xác minh, quy định tiếp tục được điều chỉnh mỗi khi phát hiện sự mơ hồ có hệ thống qua phân tích bất đồng.
+
+3.4 Dán nhãn Độc lập từ Nhiều người
+Sau khi hoàn thành chuẩn bị, các tin nhắn SMS được dán nhãn độc lập bởi một nhóm người dán nhãn đã qua huấn luyện theo Quy định Dán nhãn chuẩn hóa. Dán nhãn độc lập được áp dụng nhằm giảm thiểu thiên lệch do giao tiếp giữa các người dán nhãn và đảm bảo mỗi quyết định phản ánh đúng sự hiểu biết độc lập của từng cá nhân.
+
+Mỗi tin nhắn SMS được gán cho 10 người dán nhãn độc lập, tất cả đều đánh giá tin nhắn mà không được xem nhãn do người khác gán. Nhóm dán nhãn gồm 10 người nói tiếng Việt bản ngữ (là sinh viên và nghiên cứu sinh đại học/sau đại học ngành Khoa học Máy tính và An toàn Thông tin). Tất cả đều đã hoàn thành buổi huấn luyện chính thức về Quy định Dán nhãn trước khi thực hiện. Người dán nhãn được trả thù lao công bằng cho nỗ lực của mình và đã ký thỏa thuận bảo mật dữ liệu (NDA) để bảo vệ quyền riêng tư người dùng.
+
+Khác với phương pháp bỏ phiếu đa số chốt nhãn ngay sau khi dán, khung làm việc đề xuất chủ động tách biệt giai đoạn dán nhãn và giai đoạn xác minh. Mục tiêu là lưu giữ toàn bộ quyết định cá nhân phục vụ đánh giá chất lượng thay vì loại bỏ các ý kiến thiểu số.
+
+Sau khi hoàn thành, kết quả gán nhãn được hợp nhất vào một kho lưu trữ chung. Ở giai đoạn này, không có nhãn nào bị sửa đổi hoặc xóa thủ công. Kết quả hợp nhất làm đầu vào cho khung xác minh hai giai đoạn.
+
+3.5 Đánh giá Đồng thuận và Giải quyết Bất đồng
+Sau dán nhãn độc lập, kết quả được đưa vào đánh giá đồng thuận có cấu trúc. Các tin nhắn đạt đồng thuận tuyệt đối (10/10) được chấp nhận trực tiếp vào tập dữ liệu cuối cùng. Nguồn bất đồng (44 tin nhắn) được chuyển sang quy trình phân tích chuyên sâu. Lấy cảm hứng từ Oortwijn et al. [7], phân tích này đánh giá đa góc nhìn (mơ hồ quy định, lệch lạc khái niệm, hành vi không nhất quán, lỗi cá nhân) để xử lý nguyên nhân gốc rễ một cách có hệ thống.
+
+3.6 Tuyên bố Đạo đức và Giấy phép Dữ liệu
+Tuyên bố Đạo đức: Tất cả tin nhắn SMS được thu thập với sự đồng ý của người dùng hoặc lấy từ các nền tảng báo cáo công khai. Thông tin cá nhân nhạy cảm (số điện thoại, tên riêng, tài khoản, URL) đã được thay thế hệ thống bằng các từ giữ chỗ chuẩn hóa (`[PHONE]`, `[URL]`, `[NAME]`) trong quá trình ẩn danh để bảo vệ quyền riêng tư.
+
+Giấy phép: Tập dữ liệu hoàn thiện và quy định dán nhãn được phát hành theo giấy phép Creative Commons Attribution 4.0 International (CC BY 4.0). Mã nguồn benchmark và kịch bản tiện ích được phân phối theo giấy phép MIT.
+
+3.7 Cấu trúc và Định dạng Tập dữ liệu
+Tập dữ liệu SMS phishing tiếng Việt được tổ chức theo cấu trúc phân cấp chuẩn hóa gồm các file: `raw_corpus.csv` (2.058 bản ghi thô), `gold_standard.csv` (2.007 bản ghi đã phân xử), `metadata_distribution.json` (ma trận bỏ phiếu chi tiết của 10 người dán nhãn), và `benchmark_subset.csv` (1.541 bản ghi duy nhất sau khử trùng lặp gần).
+
+Bảng 3. Cấu trúc thư mục, mô tả thuộc tính và các thành phần của kho lưu trữ tập dữ liệu.
++---------------------------------------------------+-------------------+---------------------------------------------------------------------------------------------------------------------+
+| Tên thành phần                                    | Loại              | Mô tả / Mục đích                                                                                                    |
++---------------------------------------------------+-------------------+---------------------------------------------------------------------------------------------------------------------+
+| anonymous-sms-dataset/                            | Thư mục gốc       | Thư mục chính chứa tất cả tài sản phát hành, phụ thuộc mã nguồn và tài nguyên dữ liệu.                              |
+| anonymous-sms-dataset/README.md                   | File              | Cung cấp hướng dẫn cài đặt, ví dụ sử dụng và thông tin giấy phép.                                                   |
+| anonymous-sms-dataset/annotation_guidelines.pdf   | File              | Quy định chính thức định nghĩa các quy tắc cú pháp và ngữ nghĩa áp dụng cho 10 người dán nhãn.                      |
+| data/                                             | Thư mục con       | Chứa các phân đoạn dữ liệu hoạt động và metadata tính toán.                                                         |
+| data/raw_corpus.csv                               | File              | Ngữ liệu thô ban đầu gồm 2.058 bản ghi thu thập từ tất cả các nguồn tích hợp.                                       |
+| data/gold_standard.csv                            | File              | Tập dữ liệu benchmark chính thức chứa 2.007 tin nhắn đã được phân xử đầy đủ cho đánh giá mô hình.                  |
+| data/metadata_distribution.json                   | File              | Ma trận bỏ phiếu chi tiết lưu giữ quyết định gán nhãn cá nhân của 10 người dán nhãn.                                |
+| data/benchmark_subset.csv                         | File              | Tập dữ liệu đánh giá chống rò rỉ gồm 1.541 tin nhắn SMS sau khi loại bỏ trùng lặp gần cho benchmark mô hình.       |
++---------------------------------------------------+-------------------+---------------------------------------------------------------------------------------------------------------------+
+
+Bảng 4. Mô tả chi tiết schema thuộc tính giữa các phân đoạn dữ liệu trong kho lưu trữ (raw_corpus.csv, gold_standard.csv, benchmark_subset.csv).
++----------------------+----------------+-----------+-----------------------------------------------------------------------------------------------------+-----------------------------------------------+
+| Tên file             | Tên thuộc tính | Kiểu dữ liệu| Mô tả                                                                                               | Ví dụ minh họa                                |
++----------------------+----------------+-----------+-----------------------------------------------------------------------------------------------------+-----------------------------------------------+
+| raw_corpus.csv       | message_id     | Integer   | Mã định danh duy nhất để theo dõi.                                                                  | COM_001                                       |
+| raw_corpus.csv       | raw_text       | String    | Văn bản SMS thô ban đầu.                                                                             | “quy khach co hoa don tien dien can thanh…”    |
+| raw_corpus.csv       | source         | String    | Nguồn thu thập (crawl, user_report, whitelist).                                                      | “internet”, “user_report”,…                  |
+| raw_corpus.csv       | gold_label     | String    | Nhãn phân xử chính thức.                                                                            | HAM hoặc SPAM                                 |
+| raw_corpus.csv       | agreement      | Integer   | Số phiếu đồng thuận giữa 10 người dán nhãn.                                                         | “10”, “9”, “8”,…                              |
+| gold_standard.csv    | text           | String    | Văn bản đã làm sạch sẵn sàng cho tách từ/tokenization.                                              | "Chuc mung TB 093xxx trung thuong..."         |
+| gold_standard.csv    | label          | String    | Nhãn mục tiêu sạch cho huấn luyện mô hình.                                                         | HAM hoặc SPAM                                 |
+| benchmark_subset.csv | text           | String    | Văn bản SMS đã tiền xử lý được chọn cho đánh giá chống rò rỉ sau khử trùng lặp gần.                | "Chuc mung TB 093xxx trung thuong..."         |
+| benchmark_subset.csv | label          | String    | Nhãn mục tiêu sạch cho huấn luyện mô hình.                                                         | Ham hoặc Spam                                 |
++----------------------+----------------+-----------+-----------------------------------------------------------------------------------------------------+-----------------------------------------------+
+
+4 Kết quả Thực nghiệm
+
+4.1 Kết quả Dán nhãn Ban đầu
+Trong số 2.007 tin nhắn SMS được dán nhãn bởi 10 người dán nhãn độc lập, tổng cộng có 20.070 quyết định dán nhãn đã được thu thập trước khi thực hiện phân xử bất đồng.
+
+Bảng 5. Tóm tắt kết quả dán nhãn ban đầu
++-----------------------------+-------+
+| Chỉ số                      | Giá trị|
++-----------------------------+-------+
+| Số tin nhắn SMS được dán nhãn| 2.007 |
+| Số người dán nhãn           | 10    |
+| Số nhãn trên mỗi tin nhắn   | 10    |
+| Tổng số quyết định gán nhãn | 20.070|
++-----------------------------+-------+
+
+4.2 Độ đồng thuận giữa người dán nhãn (Inter-Annotator Agreement)
+Trong số 2.007 tin nhắn SMS được xác minh, đại đa số 1.963 tin nhắn (97,81%) đạt đồng thuận tuyệt đối (10/10 phiếu trùng khớp), gồm 1.259 tin nhắn Ham hợp lệ và 704 tin nhắn Spam. 44 tin nhắn còn lại (2,19%) nhận được số phiếu không đồng nhất (23 tin ở mức 9/10, 6 tin ở mức 8/10, 10 tin ở mức 7/10, và 5 tin ở mức 6/10). Phân bố chi tiết theo từng mức đồng thuận được minh họa trong Hình 3, và các chỉ số đồng thuận tổng thể được tóm tắt trong Bảng 6.
+
+Bảng 6. Tóm tắt độ đồng thuận giữa người dán nhãn trước khi phân xử bất đồng.
++-----------------------------------+----------------+
+| Chỉ số                            | Giá trị        |
++-----------------------------------+----------------+
+| Tổng số SMS được dán nhãn         | 2.007          |
+| Số người dán nhãn                 | 10             |
+| Số danh mục nhãn                  | 2              |
+| Số tin nhắn đạt đồng thuận tuyệt đối| 1.963          |
+| Số tin nhắn có bất đồng           | 44             |
+| Chỉ số Fleiss' Kappa              | 0,9856         |
+| Mức độ đồng thuận (Landis & Koch) | Gần như tuyệt đối (Almost perfect) |
++-----------------------------------+----------------+
+
+Hệ số Fleiss' Kappa được tính toán theo công thức:
+kappa = (P_bar - P_e_bar) / (1 - P_e_bar)    (1)
+
+Trong đó P_bar đại diện cho độ đồng thuận quan sát được và P_e_bar đại diện cho độ đồng thuận ngẫu nhiên kỳ vọng. Khung làm việc đạt chỉ số Fleiss' Kappa là 0,9856, tương ứng mức "Almost Perfect Agreement" theo thang đo Landis & Koch [5].
+
+Hình 3. Phân bố mức độ đồng thuận giữa người dán nhãn trước khi phân xử bất đồng.
+
+4.3 Phân tích Bất đồng (Disagreement Analysis)
+44 tin nhắn bất đồng (2,19%) đã được chuyển sang hàng đợi phân tích nguyên nhân gốc rễ thay vì loại bỏ.
+
+Bảng 7. Phân loại nguyên nhân gốc rễ và chiến lược xử lý cho 44 tin nhắn bất đồng.
++-----------------------------+-------+------------+---------------------------------------------------------------------------------------------------------+
+| Nguồn gốc bất đồng          | Số tin| Tỷ lệ (%)  | Hành động khắc phục & Hoàn thiện Quy định                                                               |
++-----------------------------+-------+------------+---------------------------------------------------------------------------------------------------------+
+| Quy định mơ hồ              | 28    | 63,64%     | Bổ sung quy tắc rõ ràng trong Quy định về mẫu tin nhắn thông báo ngân hàng hợp lệ.                      |
+| Hiểu nhầm khái niệm         | 11    | 25,00%     | Tổ chức buổi tái huấn luyện tập trung vào đánh giá ý đồ truyền thông thay vì từ khóa cô lập.            |
+| Sai sót cá nhân             | 5     | 11,36%     | Sửa lỗi nhập liệu thư ký qua xem xét đối soát trực tiếp.                                                |
+| Tổng cộng                   | 44    | 100%       | Tất cả các trường hợp đã được phân xử thành công.                                                      |
++-----------------------------+-------+------------+---------------------------------------------------------------------------------------------------------+
+
+Sau phân xử, 27 tin nhắn đã được thu hồi về lớp Ham hợp lệ (chủ yếu là thông báo giao dịch phi chuẩn bị nhầm do thiên lệch từ khóa), và 17 tin nhắn được ổn định dưới lớp Spam (các biến thể lừa đảo tinh vi chứa URL che giấu hoặc teencode).
+
+Bảng 8. Tiến trình nâng cao độ tin cậy dữ liệu: Đồng thuận ban đầu (Vòng 1) vs Tạo Nhãn chuẩn cuối cùng (Sau phân xử).
++-----------------------------+---------+---------+---------------------------------------+
+| Chỉ số                      | Vòng 1  | Vòng 2  | Mức độ cải thiện tương đối            |
++-----------------------------+---------+---------+---------------------------------------+
+| Tổng số tin nhắn đã xác minh| 2.007   | 2.007   | Bảo toàn 100% tập dữ liệu.            |
+| Đồng thuận tuyệt đối (10/10)| 1.963   | 2.007   | +44 tin nhắn đã giải quyết (+2,19%).  |
+| Bất đồng hoạt động (<10/10) | 44      | 0       | Loại bỏ 100% nhiễu ngữ nghĩa.         |
++-----------------------------+---------+---------+---------------------------------------+
+
+Sau quy trình phân xử, 100% tập dữ liệu (2.007 tin nhắn) đã được chuyển đổi thành Nhãn chuẩn (Gold Standard) chất lượng cao gồm 1.286 Ham (1.259 + 27) và 721 Spam (704 + 17).
+
+4.4 Kết quả Phân loại Mô hình Cơ sở (Baseline Classification Results)
+
+4.4.1 Thiết lập Thực nghiệm và Chi tiết Cài đặt
+Để thiết lập một benchmark hiệu năng minh bạch, có khả năng tái lập cao cho phát hiện SMS spam tiếng Việt, chúng tôi đã tiến hành nghiên cứu thực nghiệm so sánh trên tập dữ liệu Nhãn chuẩn đã hoàn thiện. Trước khi huấn luyện, một giai đoạn lọc trùng lặp gần (near-duplicate) đã loại bỏ các tin nhắn mẫu lặp lại để tránh rò rỉ dữ liệu. Tập dữ liệu đánh giá cuối cùng chứa 1.541 tin nhắn SMS duy nhất. Quy trình đánh giá hai họ thuật toán: các mô hình học máy truyền thống sử dụng đặc trưng bề mặt và mô hình Transformer ngữ cảnh sâu PhoBERT [11].
+
+Đối với các mô hình học máy truyền thống—bao gồm Support Vector Machine với nhân Tuyến tính và RBF [12], Logistic Regression [13], Multinomial Naive Bayes [14], và Multi-Layer Perceptron [15]—biểu diễn văn bản được trích xuất bằng kỹ thuật TF-IDF triển khai qua Scikit-learn [16] với n-gram (1, 2) và tối đa 5.000 đặc trưng. Trước khi trích xuất đặc trưng, từ ghép tiếng Việt được tách bằng thư viện PyVi (`ViTokenizer.tokenize`) [17]. Tuy nhiên, do PyVi dựa trên từ điển chuẩn, hiệu quả tách từ bị giảm trên văn bản SMS không dấu và teencode (như 'ck' cho 'chuyển khoản', 'ngkhac' cho 'người khác'), gây ra nhiễu tách từ trong biểu diễn đặc trưng bề mặt.
+
+Đối với mô hình học sâu, chúng tôi tích hợp `vinai/phobert-base` (PhoBERT-base) [11]. Quá trình fine-tuning PhoBERT-base được thực hiện trên GPU NVIDIA GeForce RTX 3060 với Python 3.10 và PyTorch 2.2.0+cu121. Mô hình được huấn luyện trong 4 epoch sử dụng tối ưu hóa AdamW với learning rate 0,00002 (2e-5), weight decay 0,01, warmup ratio 0,1, batch size 16 và độ dài chuỗi tối đa 128 tokens.
+
+4.4.2 Lọc Trùng lặp Gần và Bảo vệ Rò rỉ Dữ liệu Train-Test
+Các chiến dịch lừa đảo và dịch vụ thông báo giao dịch tự động thường tạo ra lượng lớn tin nhắn dựa trên mẫu cố định chỉ khác nhau ở các trường động (tên, số điện thoại, số tiền, URL lừa đảo). Nếu chia kiểm thử chéo trực tiếp trên dữ liệu thô, các biến thể gần giống nhau sẽ rơi vào cả tập huấn luyện và tập kiểm thử, làm thổi phồng hiệu năng mô hình.
+
+Đổi lại, chúng tôi sử dụng độ đo tương đồng Jaccard 3-gram cấp ký tự. Văn bản trước tiên được chuẩn hóa (viết thường, xóa khoảng trắng thừa) và phân tách thành các tập chuỗi 3 ký tự liên tiếp. Chỉ số Jaccard giữa hai tập tin nhắn $S_A$ và $S_B$ được tính:
+$$J(S_A, S_B) = \frac{|S_A \cap S_B|}{|S_A \cup S_B|}$$ (2)
+
+Các tin nhắn có ngưỡng tương đồng $J(S_A, S_B) \ge 0,85$ được xác định là biến thể chiến dịch và bị loại bỏ. Giai đoạn này đã loại bỏ thành công 466 bản ghi trùng lặp gần (gồm 408 mẫu Ham giao dịch và 58 biến thể Spam lừa đảo), tạo ra tập dữ liệu benchmark duy nhất gồm 1.541 tin nhắn (878 Ham và 663 Spam). Tỷ lệ trùng lặp Ham cao hơn là do các thông báo ngân hàng và mã OTP tự động lặp lại khung mẫu cấu trúc giống hệt nhau trên diện rộng.
+
+4.4.3 Phân tích Hiệu năng So sánh
+Bảng 9 tổng hợp các chỉ số hiệu năng dự đoán được đánh giá bằng kiểm thử chéo 5 phần phân tầng. Tất cả các chỉ số (Accuracy, Precision, Recall, F1-score) đều được tính cho lớp Spam dương tính (Class 1) theo công thức trung bình hài hòa:
+$$F_1 = \frac{2 \times \text{Precision} \times \text{Recall}}{\text{Precision} + \text{Recall}}$$ (3)
+
+Bảng 9. So sánh hiệu năng phân loại cơ sở trên tập dữ liệu duy nhất (1.541 bản ghi) được đánh giá bằng kiểm thử chéo 5 phần phân tầng (Trung bình ± Độ lệch chuẩn).
++-------------------------+--------------+---------------+--------------+--------------+
+| Kiến trúc mô hình       | Accuracy (%) | Precision (%) | Recall (%)   | F1-Score (%) |
++-------------------------+--------------+---------------+--------------+--------------+
+| PhoBERT-base            | 97,99 ± 0,91 | 97,74 ± 1,25  | 97,59 ± 1,00 | 97,66 ± 1,05 |
+| SVM (Linear)            | 96,69 ± 1,86 | 95,21 ± 3,12  | 97,29 ± 1,31 | 96,22 ± 2,10 |
+| SVM (RBF)               | 96,88 ± 1,57 | 94,97 ± 2,98  | 98,04 ± 0,60 | 96,46 ± 1,75 |
+| Multi-Layer Perceptron  | 96,30 ± 1,69 | 94,62 ± 2,73  | 96,98 ± 1,36 | 95,77 ± 1,90 |
+| Logistic Regression     | 96,30 ± 1,50 | 94,87 ± 2,54  | 96,68 ± 1,02 | 95,76 ± 1,68 |
+| Multinomial Naive Bayes | 93,58 ± 1,02 | 94,25 ± 1,62  | 90,65 ± 2,71 | 92,38 ± 1,28 |
++-------------------------+--------------+---------------+--------------+--------------+
+
+Mô hình Transformer ngữ cảnh sâu PhoBERT-base đạt hiệu năng tổng thể cao nhất với Accuracy 97,99% ± 0,91%, Precision 97,74% ± 1,25%, Recall 97,59% ± 1,00%, và F1-Score 97,66% ± 1,05%. Để đánh giá độ vững thống kê, phương pháp tái lấy mẫu Bootstrap phi tham số ($B = 1000$) được thực hiện. Bảng 10 báo cáo khoảng tin cậy 95% F1-score của PhoBERT-base là [96,85%, 98,42%].
+
+Bảng 10. Khoảng tin cậy 95% Bootstrap (B=1000 resamples) tính trên các dự đoán out-of-fold.
++-------------------------+----------------------+-----------------------+---------------------+----------------------+
+| Kiến trúc mô hình       | Accuracy 95% CI (%)  | Precision 95% CI (%)  | Recall 95% CI (%)   | F1-Score 95% CI (%)  |
++-------------------------+----------------------+-----------------------+---------------------+----------------------+
+| PhoBERT-base            | [97,27%, 98,64%]     | [96,59%, 98,79%]      | [96,38%, 98,64%]    | [96,85%, 98,42%]     |
+| SVM (Linear)            | [95,78%, 97,47%]     | [93,52%, 96,55%]      | [96,02%, 98,44%]    | [95,15%, 97.10%]     |
+| SVM (RBF)               | [95,98%, 97,73%]     | [93,26%, 96,45%]      | [96,97%, 99,07%]    | [95,36%, 97,38%]     |
+| Multi-Layer Perceptron  | [95,33%, 97,14%]     | [92,93%, 96,11%]      | [95,59%, 98,17%]    | [94,63%, 96,76%]     |
+| Logistic Regression     | [95,33%, 97,14%]     | [92,95%, 96,40%]      | [95,32%, 97,91%]    | [94,62%, 96,75%]     |
+| Multinomial Naive Bayes | [92,34%, 94,81%]     | [92,24%, 95,94%]      | [88,22%, 92,73%]    | [90,73%, 93,83%]     |
++-------------------------+----------------------+-----------------------+---------------------+----------------------+
+
+Trong số các mô hình học máy truyền thống, SVM với nhân RBF đạt Recall cao nhất (98,04% ± 0,60%) với F1-Score 96,46% ± 1,75%, tiếp theo là Linear SVM (96.22% ± 2.10%). Logistic Regression và MLP đạt độ hội tụ ổn định quanh mức ~95,76% F1-score.
+
+Ngược lại, Multinomial Naive Bayes ghi nhận hiệu năng thấp nhất (92,38% ± 1,28% F1-score) do suy giảm đáng kể ở chỉ số Recall (90,65% ± 2,71%). Sự sụt giảm này xuất phát từ hai yếu tố chính: (i) giả định độc lập điều kiện quá mạnh không mô hình hóa được sự phụ thuộc từ phức tạp trong các tin nhắn lừa đảo chứa nhiều từ khóa, và (ii) không gian đặc trưng TF-IDF tĩnh không tổng quát hóa được các biến thể teencode sai chính tả. Kết quả thực nghiệm này củng cố các kết luận của Tuấn et al. [4], nghiên cứu cũng chứng minh các biểu diễn nhúng ngữ cảnh (PhoBERT) vượt trội rõ rệt so với các mô hình đặc trưng bề mặt truyền thống (Naive Bayes, SVM) trên nhiều biến thể văn bản tiếng Việt [4]. Trong nghiên cứu của chúng tôi, PhoBERT-base tận dụng cơ chế tách từ subword BPE và chú ý ngữ cảnh sâu, giúp ánh xạ hiệu quả các biến thể teencode nhiễu về biểu diễn ngữ nghĩa gốc trong một khung đánh giá kiểm soát rò rỉ dữ liệu nghiêm ngặt.
+
+4.5 Hạn chế của Nghiên cứu (Limitations)
+Mặc dù khung làm việc đề xuất thiết lập một tập dữ liệu minh bạch, đảm bảo chất lượng cho phân loại SMS tiếng Việt, một số hạn chế nghiên cứu cần được ghi nhận:
+
+1. Phạm vi Đánh giá Trong Phân phối (In-Distribution): Các chỉ số hiệu năng mô hình đánh giá kiểm thử chéo 5 phần trên tập dữ liệu benchmark trong phân phối đã khử trùng lặp. Hiệu năng thực tế trên lưu lượng ngoài phân phối (OOD) hoặc các chiến dịch lừa đảo zero-day mới xuất hiện áp dụng các thủ thuật ngụy trang từ ngữ mới có thể có sự biến động.
+2. Quy mô Tập dữ liệu và Mở rộng theo Thời gian: Tập dữ liệu hiện tại đóng gói 2.007 tin nhắn nhãn chuẩn (1.541 bản ghi duy nhất). Mặc dù đủ để thiết lập các mô hình phân loại cơ sở vững chắc, việc thu thập liên tục theo thời gian là cần thiết để theo dõi các mối đe dọa di động tiến hóa.
+3. Điểm nghẽn Tách từ Morphological: Các công cụ tách từ tiếng Việt chuẩn (như PyVi) giảm độ chính xác trên văn bản SMS không dấu và teencode phi chính thức, nhấn mạnh sự cần thiết của các mô hình ngôn ngữ subword thích ứng tên miền.
+
+5 Kết luận và Hướng phát triển (Conclusion and Future Work)
+Nghiên cứu này thiết lập một phương pháp dán nhãn minh bạch và đảm bảo chất lượng cho việc xây dựng tập dữ liệu SMS phishing tiếng Việt, chuyển dịch trọng tâm từ tích lũy dữ liệu đơn thuần sang kiểm soát chất lượng có thể tái lập. Thay vì loại bỏ bất đồng của người dán nhãn như nhiễu thống kê, khung làm việc tận dụng sự phân kịch ngôn ngữ như một tín hiệu quan trọng để phát hiện sự mơ hồ ngữ nghĩa và hoàn thiện hệ thống nhãn chuẩn. Trước phân xử chính thức, giai đoạn dán nhãn độc lập với 10 người dán nhãn đạt Fleiss' Kappa 0,9856 ('Almost Perfect Agreement'). Độ đồng thuận cao này khẳng định quy định dán nhãn chuẩn hóa đã thiết lập ranh giới quyết định rõ ràng cho đại đa số tin nhắn. Bất đồng chỉ tập trung ở 2,19% trường hợp biên, chủ yếu do mẫu thông báo ngân hàng phi chuẩn và teencode địa phương. Bằng cách đưa các bản ghi biên này qua quy trình giải quyết bất đồng có cấu trúc, phương pháp đảm bảo tính toàn vẹn tuyệt đối cho tập dữ liệu cuối cùng.
+
+Ở giai đoạn hiện tại, ngữ liệu gồm 2.058 tin nhắn thu thập, trong đó 2.007 tin nhắn đã hoàn thành thành công quy trình xác minh (tạo ra 1.541 bản ghi duy nhất sau khử trùng lặp). Để đảm bảo tính minh bạch và thúc đẩy hợp tác khoa học mở, tập dữ liệu benchmark cuối cùng được đóng gói cùng Quy định Dán nhãn chuẩn hóa, metadata bất đồng chi tiết và các định dạng phát hành mở. Các sáng kiến tương lai sẽ tích cực mở rộng ngữ liệu này vượt mốc 5.000 tin nhắn SMS tiếng Việt được dán nhãn, tập trung vào việc bắt các biến thể lừa đảo zero-day mới xuất hiện để liên tục kiểm thử áp lực và phát triển khung giải quyết bất đồng. Cuối cùng, tập dữ liệu mở rộng này sẽ đóng vai trò là benchmark chuẩn mực độ tin cậy cao cho huấn luyện và đánh giá các hệ thống phát hiện an ninh di động thông minh thế hệ tiếp theo trong lĩnh vực xử lý ngôn ngữ tự nhiên tiếng Việt.
+
+Tài liệu tham khảo (References)
+1. DataReportal: Digital 2026: Vietnam. Available at: https://datareportal.com/reports/digital-2026-vietnam . Last accessed 03 Jul 2026.
+2. Viettel Group: Scanning 10,000 text messages and 20,000 call signals per second, Viettel's Anti-spam system wins Silver at the World IT Awards (2020). Available at: https://viettel.com.vn/vi/tin-tuc-va-su-kien/tin-tuc/quet-10000-tin-nhan-20000-tin-hieu-cuoc-goi-moi-giay-antispam-cua-viettel-gianh-giai-bac-cntt-the-gioi/. Last accessed 25 Jun 2026.
+3. Pham, T.-H., Le-Hong, P.: Content-based approach for Vietnamese spam SMS filtering. In: 2016 International Conference on Asian Language Processing (IALP), pp. 41–44. IEEE (2016). https://doi.org/10.1109/IALP.2016.7875930
+4. Tuan, V.M., Thang, N.X., Anh, T.Q.: Evaluating the efficiency of Vietnamese SMS spam detection techniques. Journal of Science and Technology on Information Security 1(18), 30–37 (2023). https://doi.org/10.54654/isj.v1i18.932
+5. Landis, J.R., Koch, G.G.: The measurement of observer agreement for categorical data. Biometrics 33(1), 159–174 (1977). https://doi.org/10.2307/2529310
+6. Almeida, T.A., Gomez Hidalgo, J.M., Yamakami, A.: SMS Spam Collection v.1. In: Proceedings of the 2011 ACM Symposium on Document Engineering, pp. 223–224. ACM (2011). https://doi.org/10.1145/2034691.2034742
+7. Oortwijn, Y., Ossenkoppele, T., Betti, A. Interrater disagreement resolution: A systematic procedure to reach consensus in annotation tasks. In: Proceedings of the Workshop on Human Evaluation of NLP Systems (HumEval), pp. 131–141. Association for Computational Linguistics (2021). Available: https://aclanthology.org/2021.humeval-1.13/
+8. Fleiss, J. L. (1971). Measuring nominal scale agreement among many raters In Psychological Bulletin, 76, 378-382, 1971
+9. Cohen, J.: A coefficient of agreement for nominal scales. Educational and Psychological Measurement 20(1), 37–46 (1960)
+10. Artstein, R., Poesio, M.: Inter-coder agreement for computational linguistics. Research on Language and Computation 6(4), 555–596 (2008)
+11. Dat Quoc Nguyen and Anh Tuan Nguyen. 2020. PhoBERT: Pre-trained language models for Vietnamese. In Findings of the Association for Computational Linguistics: EMNLP 2020, pages 1037–1042, Online. Association for Computational Linguistics.
+12. Cortes, C., Vapnik, V.: Support-vector networks. Machine Learning 20(3), 273–297 (1995). https://doi.org/10.1007/BF00994018
+13. Hosmer Jr, D.W., Lemeshow, S., Sturdivant, R.X.: Applied Logistic Regression. John Wiley & Sons (2013).
+14. McCallum, A., Nigam, K.: A comparison of event models for Naive Bayes text classification. In: AAAI-98 Workshop on Learning for Text Categorization, vol. 752, pp. 41–48 (1998).
+15. Rumelhart, D.E., Hinton, G.E., Williams, R.J.: Learning representations by back-propagating errors. Nature 323(6088), 533–536 (1986). https://doi.org/10.1038/323533a0
+16. Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J.: Scikit-learn: Machine learning in Python. Journal of Machine Learning Research 12, 2825–2830 (2011).
+17. Xuan-Luan Nguyen: PyVi: Vietnamese Natural Language Processing Toolkit (2016). Available at: https://github.com/trungtn/pyvi.
