@@ -1,0 +1,888 @@
+--- PAGE 1 ---
+ 
+ 
+Research and Construction of a Vietnamese SMS Dataset 
+for Machine Learning Applications. 
+Abstract. The scarcity of high -quality, transparently verified benchmarks se-
+verely bottlenecks the development of intelligent Vietnamese SMS spam and 
+fraudulent detection systems. To address the issue of label noise and poor re-
+producibility in existing corpora, thi s paper introduces a quality-assured dataset 
+construction pipeline featuring a multi -annotator validation framework and a 
+structured disagreement resolution workflow. Within the current project phase, 
+2,058 raw messages were integrated from multiple source s, with a subset of 
+2,007 messages successfully completing the entire evaluation pipeline. Prior to 
+formal adjudication, the independent labeling phase involving ten unique hu-
+man annotators achieved an overall Fleiss' Kappa coefficient of 0.9856, signify-
+ing an almost perfect baseline agreement and validating the robustness of the 
+proposed annotation guideline. Prior to model evaluation, an additional near -
+duplicate filtering stage was performed to remove redundant message templates 
+originating from both mass spam campaigns and automated transactional notifi-
+cations (e.g., banking alerts and OTP messages) that could cause train -test leak-
+age under cross -validation. This produced an experimental subset of 1,541 
+unique messages for benchmark evaluation using stra tified five -fold cross -
+validation  
+Keywords:  Vietnamese SMS Dataset, SMS Spam Detection, Spam Filtering, 
+Dataset Construction, Annotation Guideline, Gold Label, Inter-Annotator 
+Agreement, Fleiss' Kappa. 
+1 Introduction 
+Short Message Service (SMS) remains an essential communication channel in Vi-
+etnam for banking, governmental services, and commercial transactions. According to 
+DataReportal, Vietnam recorded approximately 137 million mobile cellular subscrip - 
+tions in 2026, significantly exceeding the national population and highlighting the 
+widespread adoption of mobile services [1]. However, this ubiquity has led to a per -
+sistent rise in SMS spam, creating major cybersecurity challenges. Attackers increas - 
+ingly employ sophisticated social engineering techniqu es, impersonating banks and 
+trusted organizations to deceive users into revealing sensitive data [3, 4]. Consequent - 
+ly, developing reliable automated detection systems has attracted substantial attention 
+from both academia and industry. 
+Although significa nt progress has been made in Vietnamese SMS classification, 
+the availability of high -quality benchmark datasets remains limited. Most existing 
+public corpora, such as the SMS Spam Collection [6], were developed for English and 
+do not represent the linguist ic nuances, localized abbr eviations, or specific scam pat-
+terns observed in Vietnamese. Furthermore, existing r egional datasets are often lim-
+ited in scale, proprietary, or lack transparent documentation regarding annotation 
+
+
+--- PAGE 2 ---
+ 
+ 
+quality control. Many lack clear disagreement resolution procedures, which under -
+mines dataset reproducibility, annotation consistency, and long -term research value 
+[7]. 
+To address these limitations, this paper presents a quality -assured, transparent 
+framework for constructing a Vietnames e SMS dataset. Rather than relying solely on 
+simplistic majority voting, our methodology prioriti zes annotation integrity by com-
+bining independent multi -annotator labeling with a dual -stage verification process to 
+establish high-fidelity Gold Labels. Messa ges reaching a consensus among ten inde-
+pendent annotators are directly integrated, while dis agreement cases undergo collabo-
+rative review and root -cause analysis. Currently, the framework has processed 2,058 
+messages, successfully validating and finalizing a baseline subset of 2,007 high-
+quality Vietnamese SMS records for downstream machine learning research.  
+2 Related work 
+While substantial efforts have been made to construct benchmark corpora, existing 
+datasets exhibit significant limitations regarding annotation transparency and quality 
+control. For instance, the widely used SMS Spam Collection v.1 for English (Almeida 
+et al.) and the prior Vietnamese dataset proposed by Pham and Le -Hong (2016) rely 
+on manual aggregation but fail to report formal Inter -Annotator Agreement (IAA) 
+metrics or structured disagreement resolution protocols. This lack of transparent 
+quality assurance undermines dataset reproducibility and the reliability of the ground -
+truth labels. Furthermore, existing works often overlook the critical issue of near -
+duplicate template -based campaigns, which can lead to train -test leakage and artifi-
+cially inflated model performance. In contrast, our proposed dataset directly addresses 
+these gaps by establishing a rigorous multi -annotator framework (achieving a Fleiss' 
+Kappa of 0.9856) and a strict deduplication pipeline prior to benchmark evaluation  
+Dataset Language 
+Size 
+(Rec-
+ords) 
+Taxonomy 
+Inter-
+Annotator 
+Agreement 
+Public 
+Availability 
+SMS Spam 
+Collection 
+v.1 (Almeida 
+et al.)  
+English 5574 Ham/Spam Not Re-
+ported 
+Yes 
+Pham & Le -
+Hong (2016)
+  
+Vietnamese 6599 Ham/Spam Not reported Upon re-
+quest 
+Ours work Vietnamese 2007 Ham/Spam Fleiss' Kap-
+pa = 0.9856
+  
+Yes 
+
+
+--- PAGE 3 ---
+ 
+ 
+Table 1. Comparison of the proposed dataset with existing SMS spam corpora. 
+3 Proposed Dataset Construction Framework 
+3.1 Overall Framework 
+ 
+Fig. 1. Overall workflow of the proposed quality-assured Vietnamese SMS dataset construction 
+framework. 
+The primary objective of this study is not  only to construct a Vietnamese SMS dataset 
+but also to establish a quality -assured and reproducible annotation framework for 
+generating reliable ground -truth labels. Instead of treating annotation as a one -time 
+labeling activity, the proposed framework in corporates continuous quality improve -
+ment throughout the dataset construction process. The overall w orkflow is illustrated 
+in Fig. 1. 
+The proposed framework consists of four major stages: SMS data collection, anno -
+tation preparation, independent multi -annotator labeling, and iterative quality assur -
+ance. SMS messages are first collected from multiple heterogeneous sources and fil -
+tered according to predefined inclusion and exclusion criteria. Prior to annotation, all 
+annotators are provided with a standard ized Annotation Guideline to ensure a com -
+mon understanding of annotation objectives and decision rules. 
+Inspired by the systematic disagreement resolution procedure proposed by 
+Oortwijn et al. [7], the proposed framework treats annotation disagreements as  indica-
+tors of potential quality issues rather than simple annotation errors. Each disagree-
+ment is therefore analyzed to identify its underlying cause, including ambiguous an-
+notation guidlines, conceptual misalignment among annotators, inconsistent annota-
+tion behavior, or individual annotation mistakes. Appropriate corrective actions, such 
+as guideline refinement, annotator retraining, or re -annotation, are subsequently per-
+formed before the messages are re evaluated through the verification process. 
+Unlike conventional annotation pipelines, the proposed framework establishes a 
+closed-loop quality assurance mechanism, in which disagreement analysis continu -
+ously improves both the annotation guideline and annotator consistency. This iterative 
+process aims to m aximize annotation reliability while ensuring that the resulting da -
+
+
+
+--- PAGE 4 ---
+ 
+ 
+taset remains transparent, reproducible, and suitable for future machine learning and 
+natural language processing research. 
+3.2 SMS Collection 
+The quality of a machine learning dataset largely  depends on the diversity, authentici -
+ty, and representativeness of its data sources. Therefore, the proposed dataset was 
+constructed by collecting Vietnamese SMS messages from multiple heterogeneous 
+sources rather than relying on a single collection chann el. This strategy aims to im -
+prove linguistic diversity while reducing potential sampling bias. 
+ 
+ 
+Fig. 2. SMS Data Collection Pipeline 
+As illustrated in Fig. 2, SMS messages were collected from four primary channels: 
+community contributions, volunteer submissions, publicly available online resources, 
+and partner organizations. In the dataset schema (Table 4), these sources are mapped 
+into three standardized categorical attributes: crawl (online resources), user_report 
+(community and volunteer submissions), and whitelist (partner organizations). Com-
+munity contributions and volunteer submissions provide real -world messages re-
+ceived by mobile users in their daily lives, allowing the dataset to capture contempo-
+rary phishing  campaigns, promotional advertisements, financial notifications, and 
+legitimate personal communications.  
+To protect user privacy, all collected messages underwent an anonymization pro-
+cessbefore annotation. Personally identifiable information (PII), includ ing phone 
+numbers, personal names, identification numbers, bank account information, URLs, 
+and othersensitive content, was either removed or replaced with standardized place -
+holders while preserving the semantic characteristics required for annotation and sub-
+sequent machine learning applications. 
+To ensure high data quality and eliminate potential noise before the formal annota -
+tion phase, a rigorous screening pipeline was executed combining automated scripts  
+and a systematic manual inspection protocol. Ou t of the 2,058 raw messages initially-
+
+
+
+--- PAGE 5 ---
+ 
+ 
+collected from the four heterogeneous sources, a total of 51  records (2.48%) were  
+systematically excluded based strictly on the predefine d technical and semantic filter-
+ing criteria outlined in Table 2 . First, an automat ed Python script was utilized to per-
+form exact deduplication, removing 23  redundant message variants generated by  
+mass-broadcast spam campaigns. Second, a structured, two -pass manual verification-
+was conducted by the core research team to elimin ate 9 messages with severe structu-
+al corruption (e.g., truncated text or unresolvab le encoding failures) and 19 messages 
+holding insufficient semantic information following the PII anonymization phase. 
+This hybrid screening protocol ensures that the subsequent m ulti-annotator evaluation 
+pipeline operates exclusively on a clean, robust, and linguistically viable corpus, rei-
+forcing the reproducibility of our methodology. 
+Reason Messages 
+Duplicate 23 
+Severe structural corruption, including truncated text from 
+system logging errors or unresolvable character encoding 
+failures 
+9 
+Contained insufficient semantic information after the anony-
+mization process (e.g., messages stripped of critical non-
+textual tokens or containing only isolated, meaningless nu-
+meric OTP codes). 
+19 
+Table 2. Quantitativebreakdown of excluded messages during the data cleaning and filtering 
+stage. 
+3.3 Annotation Guideline 
+To minimize annotation subjectivity and improve labeling consistency, a standardized 
+Annotation Guideline was developed before the annotation process. The guideline 
+establishes a unified decision -making framework by defining annotation objectives, 
+label definitions, decision rules, and representative examples. All annotators were 
+required to study the guideline before participating in the annotation task. 
+The guideline also addresses key linguistic nuances in Vietnamese SMS communi-
+cation. As observed by Tuan et al. [4], spammers overwhelmingly favor unaccented 
+text (non -diacritic Vietnamese) to bypass  character limit constraints and reduce 
+transmission costs while preserving readability for human targets. Our guideline in-
+corporates standard normalization rules (e.g., mapping variant promotional markers 
+such as 'quảng cáo', 'quang cao', '[QC]' to a unif ied token representation [4]) and spec-
+ifies decision rules for ambiguous cases. Annotators were instructed to evaluate each 
+message according to its communication intent, contextual meaning, and potential 
+security risk rather than isolated keywords. For ex ample, the presence of terms such 
+as promotion, bank, or reward does not automatically indicate spam. Instead, annota-
+tors considered whether the overall message exhibited deception, impersonation, co-
+ercion, or unauthorized commercial solicitation. 
+Spam is defined as a broad category comprising two semantic sub -categories: 
+Comercial Spam, which includes unsolicited marketing promotions and unauthorized 
+
+
+--- PAGE 6 ---
+ 
+ 
+advertisements, and Fraudulent/Phishing Spam, which includes impersonation at-
+tacks, fraudulent financial sc hemes, and malicious messages intended to steal infor-
+mation or financial assets. 
+For the baseline binary classification task, both sub -categories are assigned the 
+same Spam label. This design reflects the objective of constructing a binary SMS 
+spam detection dataset while preserving finer semantic distinctions in the annotation 
+guideline for future analyses an d potential taxonomy extension. The guideline also 
+specifies decision rules for ambiguous cases. Annotators were instructed to evaluate 
+each message a ccording to its communication intent, contextual meaning, and poten-
+tial security risk rather than isolated keywords. For example, the presence of terms 
+such as promotion, bank, or rewarddoes not automatically indicate spam. Instead, 
+annotators considered w hether the overall message exhibited decep -tion, impersona-
+tion, coercion, or unauthorized commercial solicitation. 
+Representative examples and common annotation pitfalls identified during  prelim-
+inary annotation rounds were incorporated into the guideline to improve inter -
+annotator consistency. During the verification stage, the guideline was revised when -
+ever systematic ambiguities were identified through disagreement analysis, supporting 
+continuous improvement of annotation quality. 
+3.4 Independent Multi-Annotator Labeling 
+After completing the annotation preparation stage, the collected SMS messages were 
+independently annotated by a team of trained annotators following the standardized 
+Annotation Guideline described in the previous section. Independent annotat ion was 
+adopted to minimize potential bias arising from communication among annotators and 
+to ensure that each labeling decision reflected the annotator's own interpretation of the  
+predefined annotation criteria. 
+Each SMS message was assigned to ten indepe ndent annotators, all of whom eval-
+uated the message without access to the labels assigned by other annotators. This 
+independent annotation strategy provides multiple judgments for each message, al-
+lowing the subsequent verification process to evaluate annot ation consistency and 
+identify disagreement cases objectively. The annotation team comprised 10 native 
+Vietnamese speakers (undergraduate and graduate researchers in Computer Science 
+and Cybersecurity). All annotators completed a formal training session on  the Anno-
+tation Guideline prior to labeling. Annotators were compensated fairly for their effort 
+and signed privacy non-disclosure agreements to protect user data. 
+Unlike majority-voting approaches that determine the final label immediately after 
+annotation, the proposed framework intentionally separates annotation from verifica-
+tion. The objective of this design is to preserve all individual annotation decisions for 
+subsequent quality assessment rather than discarding minority opinions. Consequent-
+ly, every annotation record, including disagreement cases, becomes valuable evidence 
+for evaluating annotation consistency and identifying potential weakn esses in the 
+annotation process. 
+After all annotators completed their labeling tasks, the annotation results wer e 
+merged into a unified annotation repository. At this stage, no annotation was manual-
+
+
+--- PAGE 7 ---
+ 
+ 
+ly modified or removed. Instead, the merged annotation results served as the input for 
+the dual-stage verification framework presented in the following section. 
+3.5 Consensus Assessment and Disagreement Resolution 
+Following independent annotation, results are subjected to a structured consensus 
+assessment to evaluate consistency. Unlike conventional workflows that rely on ma-
+jority voting, the proposed framework preserves every  individual decision and sys-
+tematically examines disagreement cases to identify quality issues. 
+Messages achieving complete consensus are directly accepted into the final dataset. 
+Conversely, disagreement cases are transferred to a dedicated analysis proce ss. In-
+spired by Oortwijn et al. [7], this analysis evaluates multiple perspectives, including 
+guideline ambiguity, conceptual inconsistency, variable annotation behavior, and 
+human error, to address root causes systematically rather than case-by-case. 
+3.6 Ethics Statement and Data Licensing 
+Ethics Statement: All SMS messages were collected with user consent or obtained 
+from public reporting platforms. Sensitive personal details —including phone num-
+bers, personal names, account credentials, and specific URLs —were systematically 
+replaced with standardized placeholders (e.g., [PHONE], [URL], [NAME]) during 
+anonymization to safeguard user privacy. 
+Licensing: The finalized dataset and annotation guidelines are published under the 
+Creative Commons Attribution 4.0 International (CC BY 4.0) license. The benchmark 
+baseline code and utility scripts are distributed under the MIT License. 
+3.7 Dataset Structure and Format 
+To ensure absolute transparency, data portability, and high reproducibility for the 
+research community, the finalized Vietnamese SMS phishing dataset is structured into 
+a standardized hierarchy. The repository package is organized as follows:  
+ 
+Component name Type Description / Purpose 
+anonymous-sms-dataset/ Root directory The primary folder encapsu-
+lating all published assets, 
+code dependencies, and data 
+resources. 
+anonymous-sms-
+dataset/README.md 
+File Provides instructions for in-
+stallation, usage examples, 
+and licensing information. 
+anonymous-sms-
+dataset/annotation_guidelines.pdf 
+File The strict protocol defi ning 
+syntactic and semantic rules 
+applied by the ten independent 
+annotators. 
+
+
+--- PAGE 8 ---
+ 
+ 
+data/ Sub-Folder Dedicated container holding 
+all operational data partitions 
+and computational metadata. 
+data/raw_corpus.csv File The initial unadjudicated cor-
+pus comprising 2,058 collect-
+ed records across all integrated 
+sources. 
+data/gold_standard.csv File The final benchmark dataset 
+containing 1,763 fully adjudi-
+cated messages used for 
+downstream evaluation. 
+data/metadata_distribution.json File Detailed voting matrix pre-
+serving individual label deci-
+sions from the ten human 
+annotators. 
+Data/benchmark_subset.csv File A leakage -controlled evalua-
+tion subset containing 1,541 
+SMS messages after near -
+duplicate removal, used for 
+baseline mod -el benchmark-
+ing. 
+Table 3. Directory structure, schema specifications, and components of the dataset repository. 
+The core utility of the repository resides within the gold_standard.csv partition. To 
+provide a clear overview of the data architecture for machine learn ing integration, 
+Table 3 outlines the explicit attribute schema, data types, constraints, and academic 
+examples for each feature included in the gold-standard benchmark file. 
+File name Attribute 
+name 
+Data 
+type 
+Description Example 
+raw_corpus.csv 
+message_id Integer Unique iden-
+tifier for 
+tracking. 
+COM_001 
+raw_text String The original 
+raw SMS 
+text. 
+“quy khach co 
+hoa don tien dien 
+can thanh 
+toan…” 
+source String Origin reposi-
+tory (crawl, 
+user_report, 
+whitelist). 
+“internet”, “us-
+er_report”,… 
+gold_label String The definitive 
+adjudicated 
+class 
+HAM or SPAM 
+agreement Integer Matching “10”,“9”,“8”,… 
+
+
+--- PAGE 9 ---
+ 
+ 
+votes among 
+the 10 anno-
+tators. 
+gold_standard.csv text String Streamlined 
+text content 
+ready for 
+tokenization. 
+"Chuc mung TB 
+093xxx trung 
+thuong..." 
+label String Clean target 
+label for 
+model train-
+ing 
+HAM or SPAM 
+benchmark_subset.csv text String Preprocessed  
+SMS text 
+selected for 
+leakage con-
+trolled 
+benchmark 
+evaluation 
+after near-
+duplicate 
+removal. 
+"Chuc mung TB  
+093xxx trung  
+thuong..." 
+ 
+label String Clean target  
+label for  
+model train- 
+ing 
+Ham or Spam 
+Table 4. Attribute schema specifications across dataset repository partitions (raw_corpus.csv, 
+gold_standard.csv, and benchmark_subset.csv). 
+4 Experimental Results 
+4.1 Initial Annotation Results 
+Following the independent annotation process described in Section 2, ten annota-
+tors completed the labeling task using the standardized Annotation Guideline. At this 
+stage, the annotation results represent the initial labeling outcomes be fore the disa-
+greement resolution and quality assurance procedures were applied. Therefore, the 
+statistics presented in this section are intended to evaluate the consistency of the anno-
+tation process rather than the characteristics of the final released dataset. 
+ 
+SMS Annotated 2007 
+Annotator 10 
+Label per message 10 
+Total annotation decisions 20070 
+
+
+--- PAGE 10 ---
+ 
+ 
+Table 5. Initial Annotation Summary 
+4.2 Inter-Annotator Agreement 
+Following the first-stage annotation process, each SMS message was independent-
+ly labeled by ten annotators according to the Annotation Guideline described in Sec-
+tion 2. To evaluate annotation consistency, the individual annotation files were 
+merged by SMS identifier, allowing the labels assigned by different annotator s to be 
+aligned and compared on a message-by-message basis. 
+The merged annotation matrix was evaluated using Fleiss' Kappa, a statistical 
+measure designed to assess agreement among multiple annotators assigning categori-
+cal labels to the same set of instanc es [8, 10]. Unlike Cohen's Kappa, which is math-
+ematically restricted to a fixed pair of exactly two raters [5, 9], Cohen's framework is 
+fundamentally unsuitable for this study because each SMS message was independent-
+ly annotated by a larger group of ten an notators. Consequently, Fleiss' Kappa is 
+uniquely appropriate as it accommodates an arbitrary number of raters per item and 
+estimates the degree to which the observed consensus exceeds the chance -expected 
+agreement [8]. 
+The Fleiss' Kappa coefficient is computed as follows: 
+ 𝜅 =
+𝑃̄ −𝑃̄𝑒
+1−𝑃̄𝑒
+  (1) 
+Where 𝑃̅  denotes the observed agreement among annotators and 𝑃𝑒̅  represents the 
+expected agreement by chance. The observed agreement is obtained by averaging the 
+agreement score of each SMS message, whereas the expected agreement is estimated 
+from the overall distribution of annotation categories 
+Metric Value 
+Total annotated SMS 2007 
+Number of annotators 10 
+Annotation categories 2 
+Messages with complete agreement  1963 
+Messages with disagreement 44 
+Fleiss' Kappa  0.9856 
+Agreement level (Landis & Koch) Almost perfect 
+Table 6. Summary of inter-annotator agreement before disagreement resolution. 
+As shown in Table 6 , the proposed annotation framework achieved a Fleiss' Kappa 
+value of 0.9856, corresponding to Almost Perfect Agreement  according to the inter-
+pretation proposed by Landis and Koch [5]. This result indicates that the Annotation 
+Guideline enabled a high degr ee of consistency among independent annotators prior 
+to the disagreement resolution process. Nevertheless, Fleiss' Kappa provides only an 
+overall measure of annotation consistency and does not reveal how agreement is dis-
+tributed across individual SMS messages. 
+
+
+--- PAGE 11 ---
+ 
+ 
+To provide a more intuitive view of  the annotation outcomes, Fig. 3  illustrates the 
+distribution of agreement levels among the 2007  annotated SMS messages before 
+disagreement resolution. 
+ 
+Fig. 3. Distribution of inter-annotator agreement before disagreement resolution. 
+Agreement Level Ham Spam Total 
+10/10 1,259 704 1,963 (97.81%) 
+9/10 3 20 23 (1.15%) 
+8/10 2 4 6 (0.30%) 
+7/10 3 7 10 (0.50%) 
+6/10 0 5 5 (0.25%) 
+Total 1,267 740 2,007 (100.00%) 
+Table 7. Detailed distribution of inter -annotator agreement levels across classes prior to disa-
+greement resolution. 
+4.3 Disagreement Analysis 
+Although the proposed annotation framework achieved an exceptionally high base -
+line inter -annotator agreement (Fleiss' Kappa = 0.9856, validating the initial Guide -
+line and training efficacy), a minor subset of 44 SMS messages (2.19%) produced 
+inconsistent labels among the ten independent annotators prior to resolution. Rather 
+than treating these contested cases as statistical noise or discarding minority votes, 
+they were transferred to a dedicated disagreement queue to analyze root causes and 
+generate thefinal Gold Standard.  
+Table 8 summarizes the distribution of root causes identified during the  systematic 
+review process, along with the specific corrective actions executed. 
+Disagreement source Cases Percentage 
+Guideline ambiguity 28 63,64% 
+Conceptual misunderstanding 11 25,00% 
+Individual oversight 5 11,36% 
+1260
+3
+1
+3
+467
+19
+2
+4 4
+10 out of
+10
+9 out of
+10
+8 out of
+10
+7 out of
+10
+6 out of
+10
+HAM
+SPAM
+
+
+--- PAGE 12 ---
+ 
+ 
+Table 8. Root-cause classification and resolution strategies for the 44 contested messages 
+To demonstrate the concrete utility of our closed -loop quality assurance frame -
+work, all 44 contested instances underwent formal adjudication following guideline 
+refinement. As detailed in Table 7, the resolution process successfully eliminated all 
+semantic alignment anomalies. Specifically, 27 messages were reclaimed as legiti -
+mate Ham communications (primarily non -standard transaction alerts and automated 
+system announce ments that initial annotators misclassified dueto strict keyword bi -
+as), while 17 messages were stabilized under the Spam class (subtle phishing variants 
+containing obfuscated URLs or promotional teencode) 
+Metric Round 1 Round 2 Relative improvement 
+Total Vetted Messages 2007 2007 Complete dataset retained. 
+Absolute Consensus 
+(10/10) 
+1963 2007 +44 resolved messages 
+(+2.19%). 
+Active Disagreement 
+(<10/10) 
+44 0 100% semantic noise 
+eliminated. 
+Table 9. Data fidelity progression: Initial Inter-Annotator Agreement (Round 1) vs. Final Gold 
+Standard Generation (Post-Resolution). 
+By systematically routing borderline cases through our disagreement resolution 
+work-flow, 100% of the collected corpus (2,007 messages) was conve rted into a high-
+fidelity Gold Standard dataset containing 1,286 Ham (1,259 + 27) and 721 Spam (704 
++ 17) records. This "before vs. after" progression empirically proves that our frame - 
+work does not merely log human divergence, but actively cures label no ise to deliver 
+clean training signals for downstream machine learning applications 
+4.4 Baseline Classification Results 
+4.4.1. Experimental Setup and Implementation Details 
+To establish a transparent, highly reproducible performance benchmark for Vi-
+etnam-ese SMS spam detection, we conducted a comparative empirical study using 
+the fi -nalized Gold Standard corpus. Before model training, a dedicated near -
+duplicate fil -tering stage was applied to remove template -based SMS messages that 
+could intro -duce train-test leakage. The resulting evaluation corpus contained 1,541 
+unique SMS messages. The classification workflow evaluates two distinct families of 
+algorithms: traditional machine learning architectures utilizing surface -level features 
+and a fine-tuned deep contextual Transformer model [11]. 
+For traditional machine learning baselines, including Support Vector Machine with 
+Linear and RBF kernels [12], Logistic Regression [13], Multinomial Naive Bayes 
+[14], and a Multi -Layer Perceptron [15], textual representations were extracted using 
+Term Frequency -Inverse Document Frequency (TF -IDF) vectorization implemented 
+via scikit-learn [16]. The feature space was configured with an n -gram range of (1, 2) 
+and capped at a maximum vocabulary size of 5,000 features. Prior to feature extrac-
+tion, Vietnamese compound words were segmented using the PyVi toolkit (ViTo-
+kenizer.tokenize) [17]. However, because PyVi relies on standard dictionary lookup, 
+
+
+--- PAGE 13 ---
+ 
+ 
+its segmentation efficacy degrades on unaccented SMS text and informal tee ncode 
+(e.g., 'ck' for 'chuyển khoản', 'ngkhac' for 'người khác'), introducing tokenization noise 
+into traditional surface feature representations. 
+To fulfill our promise of evaluating deep pre -trained language models, we integrat -
+ed vinai/phobert -base (Pho BERT-base), a state -of-the-art pre -trained Transformer 
+architecture optimized for Vietnamese natural language processing. Fine -tuning of 
+PhoBERT-base was executed on a dedicated workstation equipped with an NVIDIA 
+GeForce RTX 3060 GPU running Python 3.14.2  and PyTorch 2.12.0+cu126. The 
+model was trained for 4 epochs using the  AdamW optimizer with a learning rate of 
+0.00002 (2e-5), a weight decay of 0.01, a warmup ratio of 0.1, a per -device batch size 
+of 16, and a maximum sequence length of 128 tokens. Model  selection was governed 
+by evaluating the highest F1 -score on the positive class at each epoch 
+(load_best_model_at_end=True). 
+4.4.2. Near-Duplicate Filtering and Train-Test Leakage Protection 
+While the deduplication process was initially motivated by the n eed to filter out 
+template-based phishing and spam campaigns, empirical observations revealed that 
+the vast majority of near -duplicates (87%) were actually legitimate messages (Ham). 
+This is highly consistent with real -world mobile traffic, where legitima te institutional 
+communications, such as banking OTPs, automated transaction aler ts, and promotion-
+al broadcasts, rely heavily on fixed templates. 
+To eliminate potential evaluation bias caused by near -duplicate spam campaigns, a 
+rigorous multi-stage deduplication pipeline was executed on the 2,007 gold -standard 
+messages prior to any dataset splitting. Phishing campaigns typically generate vast 
+amounts of template -based messages that differ only in dynamic entities (e.g., recipi -
+ent names, phone numbers, or fr audulent URLs). Performing cross -validation directly 
+on raw data would risk placing near -identical variants into both training and testing 
+folds, leading to artificially inflated performance metrics.  To prevent this, we em-
+ployed a character-level 3-gram Jaccard similarity metric. Texts were first normalized 
+(lowercased and whitespace -trimmed) and decomposed into sets of contiguous 3 -
+character sequences. The Jaccard index between two mes -sage sets 𝑆𝐴  and 𝑆𝐵 was 
+computed as:  
+ 𝐽(𝑆𝐴, 𝑆𝐵) =
+|𝑆𝐴∩𝑆𝐵|
+|𝑆𝐴∪𝑆𝐵| (2) 
+Messages exhibiting a similarity threshold of 𝐽 ≥ 0.85 were identified as campaign 
+variants and filtered out. This stage successfully removed 466 near -duplicate records, 
+yielding a strictly unique benchmark corpus of 1,541 messages (878 Ham  and 663 
+Spam). This workflow guarantees that no message pair with 𝐽 ≥ 0.85 spans across the 
+training and evaluation splits of any fold. 
+4.4.3 Comparative Performance Analysis 
+Table 10  consolidates the predictive performance metrics evaluated on the inde -
+pendentevaluated using stratified five -fold cross -validation. All reported metrics, 
+
+
+--- PAGE 14 ---
+ 
+ 
+including Accuracy, Precision, Recall, and F1 -score, were computed for the Spam 
+classfor the Spam positive class (Class 1) using the harmonic mean formula: 
+ 𝐹1 =
+2×𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛×𝑅𝑒𝑐𝑎𝑙𝑙
+𝑃𝑟𝑒𝑐𝑖𝑠𝑖𝑜𝑛×𝑅𝑒𝑐𝑎𝑙𝑙  (3) 
+ 
+Model Architecture Accuracy 
+(%) 
+Precision 
+(%) 
+Recall 
+(%) 
+F1-Score 
+(%) 
+PhoBERT-base 97.99 
+±0.91 
+97.74 
+±1.25 
+97.59 
+±1.00 
+97.66 
+±1.05 
+SVM (Linear) 96.69 
+±1.86 
+95.21 
+±3.12 
+97.29 
+±1.31 
+96.22 
+±2.10 
+SVM (RBF) 96.88 
+±1.57 
+94.97 
+±2.98 
+98.04 ± 
+0.60 
+96.46 
+±1.75 
+Multi-Layer Perceptron 96.30 
+±1.69 
+94.62 
+±2.73 
+96.98 ± 
+1.36 
+95.77 
+±1.90 
+Logistic Regression 96.30 
+±1.50 
+94.87 
+±2.54 
+96.68 ± 
+1.02 
+95.76 
+±1.68 
+Multinomial Naive Bayes 93.58 
+±1.02 
+94.25 
+±1.62 
+90.65 ± 
+2.71 
+92.38 
+±1.28 
+Table 10. Baseline classification performance comparison on  the unique dataset (1,541 rec-
+ords) evaluated using stratified five-fold cross-validation (Mean ± Std). 
+As detailed in Table 10 , the fine -tuned deep contextual Transformer model, 
+PhoBERT-base, achieved the highest overall classification efficacy across the 5 folds, 
+attaining a mean cross-validation accuracyof 97.99% ± 0.91%, a precision of 97.74% 
+± 1.25%, a recall of 97.59% ± 1.00%, and an F1-Score of 97.66% ± 1.05%. To further 
+evaluate statistical robustness independently of fold partitioning, a non -parametric 
+Bootstrap resampling ( B = 1000) was conducted on out -of-fold predictions. As re-
+ported in Table 11 , PhoBERT-base consistently maintained the highest lower -bound 
+perfor-mance, yielding a narrow 95% F1 -score confidence interval of [96.85%, 
+98.42%]. 
+Model Architec-
+ture 
+Accuracy 
+95% CI (%) 
+Precision 
+95% CI (%) 
+Recall 95% 
+CI (%) 
+F1-Score 
+95% CI (%) 
+PhoBERT-base [97.27%, 
+98.64%] 
+[96.59%, 
+98.79%] 
+[96.38%, 
+98.64%] 
+[96.85%, 
+98.42%] 
+SVM (Linear) [95.78%, 
+97.47%] 
+[93.52%, 
+96.55%] 
+[96.02%, 
+98.44%] 
+[95.15%, 
+97.10%] 
+SVM (RBF) [95.98%, 
+97.73%] 
+[93.26%, 
+96.45%] 
+[96.97%, 
+99.07%] 
+[95.36%, 
+97.38%] 
+Multi-Layer Per-
+ceptron 
+[95.33%, 
+97.14%] 
+[92.93%, 
+96.11%] 
+[95.59%, 
+98.17%] 
+[94.63%, 
+96.76%] 
+Logistic Regres-
+sion 
+[95.33%, 
+97.14%] 
+[92.95%, 
+96.40%] 
+[95.32%, 
+97.91%] 
+[94.62%, 
+96.75%] 
+Multinomial [92.34%, [92.24%, [88.22%, [90.73%, 
+
+
+--- PAGE 15 ---
+ 
+ 
+Naive Bayes 94.81%] 95.94%] 92.73%] 93.83%] 
+Table 11. Bootstrap 95% Confidence Intervals (B=1000 resamples) computed on out -of-fold 
+predictions. 
+Bootstrap resampling was performed on the aggregated out -of-fold predictions 
+generated during five -fold cross -validation. Each bootstrap sample was obtained by 
+sampling prediction pairs with replacement 1,000 times. Among traditional machine 
+learning baselines, SVM with RBF kernel achieved the highest overall recall (98.04% 
+± 0.60%) with an F1 -Score of 96.46% ± 1.75%, closely followed by Linear SVM 
+(96.22% ± 2.10%). Logistic Regression and MLP demon -strated stable convergence 
+around ~95.76% F1 -score. Conversely, Multinomial Naive Bayes registered the low-
+est performance (92.38% ± 1.28% F1 -score) due to a noticeable degradation in recall 
+(90.65% ± 2.71%). This performance drop stems from two primary factors: (i) the 
+strong conditional independence assumption f ailing to model complex word depend-
+encies in multi -keyword scam messages, and (ii) static TF -IDF feature spaces failing 
+to generalize across misspelled teencode variations. These empirical findings corrobo-
+rate the conclusions of Tuan et al. [4], who simila rly demonstrated that pre -trained 
+contextual embeddings (PhoBERT) significantly outperform traditional surface -level 
+feature models (such as Naive Bayes and SVM) across diverse Vietnamese text vari-
+ants [4]. In our work, PhoBERT -base leverages subword Byte -Pair Encoding (BPE) 
+tokenization and deep contextual attention, enabling it to map noisy teencode variants 
+to their underlying semantic representations effectively within a strictly deduplicated, 
+leakage-controlled evaluation framework. 
+4.5 Limitations 
+While the proposed framework establishes a transparent, quality -assured dataset for 
+Vietnamese SMS classification, several research limitations should be acknowledged:  
+1. In-Distribution Evaluation Scope: Model performance metrics evaluate five -fold 
+cross-validation on an in -distribution, deduplicated benchmark corpus. Real -world 
+performance on out -of-distribution (OOD) traffic or newly emerging zero -day 
+phishing campaigns employing novel lexical obfuscation tactics may vary. 
+2. Dataset Scale and Longitudinal Expansion:  The dataset currently encapsulates 
+2,007 gold -standard messages (1,541 unique records). Although sufficient for es-
+tablishing robust baseline classifiers, continuous longitudinal collection is neces-
+sary to track evolving mobile threats over time. 
+3. Morphological Segmentation Bottlenecks: Standard Vietnamese segmenters (e.g., 
+PyVi) exhibit reduced accuracy on non -diacritic SMS text and informal teencode, 
+emphasizing the necessity of domain-adapted subword language models. 
+
+
+--- PAGE 16 ---
+ 
+ 
+5 Conclusion and future work 
+This study establishes a quality -assured and transparent annotation methodology for 
+constructing a Vietnamese SMS phishing dataset, shifting the emphasis from simple 
+data accumulation to reproducible quality control. Rather than dismissing human 
+disagreement as stati stical noise, the proposed framework leverages annotator diver-
+gence as a critical linguistic signal to uncover semantic ambiguities and systematical-
+ly refine the underlying gold standard labels. Prior to formal adjudication, the inde-
+pendent labeling phase involving ten unique annotators achieved an overall Fleiss' 
+Kappa coefficient of 0.9856, signifying an 'Almost Perfect Agreement.' This high 
+baseline consensus confirms that the standardized annotation guidelines effectively 
+established clear decision boun daries for the vast majority of messages. Human disa-
+greement was strictly confined to a minor 2.19% subset of edge cases, primarily 
+caused by non -standard banking notification templates and localized teencode abbre-
+viations. By routing these specific border line instances through the structured disa-
+greement resolution workflow, the methodology effectively guarantees the integrity 
+of the finalized dataset. 
+At the current developmental stage, the corpus comprises 2,058 collected messag-
+es, of which 2,007 have successfully progressed through the complete multi -annotator 
+validation pipeline (yielding 1,541 unique records post -deduplication). To ensure 
+absolute transparency and facilitate open -science collaboration, the final benchmark 
+dataset is packaged alongside its standardized Annotation Guideline, granular disa-
+greement metadata, and open -access distribution formats. Future initiatives will ac-
+tively expand this corpus beyond its current phase to achieve a targeted milestone of 
+over 5,000 annotated Vietnamese SMS  messages, specifically focusing on capturing 
+newly emerging zero -day phishing variants to stress -test and evolve the resolution 
+framework continuously. Ultimately, this scaling corpus serves as a foundational, 
+high-fidelity benchmark for training and eval uating next-generation intelligent cyber-
+security detection systems within the Vietnamese natural language processing do-
+main. 
+References 
+1. DataReportal: Digital 2026: Vietnam. Available at: https://datareportal.com/reports/digital-
+2026-vietnam . Last accessed 03 Jul 2026. 
+2. Viettel Group: Scanning 10,000 text messages and 20,000 call signals per second, Viettel's 
+Anti-spam system wins Silver at the World IT Awards (2020). Available at: 
+https://viettel.com.vn/vi/tin-tuc-va-su-kien/tin-tuc/quet-10000-tin-nhan-20000-tin-hieu-
+cuoc-goi-moi-giay-antispam-cua-viettel-gianh-giai-bac-cntt-the-gioi/. Last accessed 25 Jun 
+2026. 
+3. Pham, T.-H., Le -Hong, P.: Content -based approach for Vietnamese spam SMS filtering. 
+In: 2016 International Conference on Asian Language Processing (IALP), pp. 41–44. IEEE 
+(2016). https://doi.org/10.1109/IALP.2016.7875930 
+
+
+--- PAGE 17 ---
+ 
+ 
+4. Tuan, V.M.,  Thang, N.X., Anh, T.Q.: Evaluating the efficiency of Vietnamese SMS spam 
+detection techniques. Journal of Science and Technology on Information Security 1(18), 
+30–37 (2023). https://doi.org/10.54654/isj.v1i18.932 
+5. Landis, J.R., Koch, G.G.: The measurement of observer agreement for categorical data. 
+Biometrics 33(1), 159–174 (1977). https://doi.org/10.2307/2529310 
+6. Almeida, T.A., Gomez Hidalgo, J.M., Yamakami, A.: SMS Spam Collection v.1. In: Pro-
+ceedings of the 2011 ACM Symposium on Document Engineering, pp. 223 –224. ACM 
+(2011). https://doi.org/10.1145/2034691.2034742 
+7. Oortwijn, Y., Ossenkoppele, T., Betti, A. Interrater disagreement resolution: A systematic 
+procedure to reach consensus in annotation tasks.  In : Proceedings of the Workshop on 
+Human Evaluation of NLP Syste ms (HumEval), pp. 131 –141. Association for Computa-
+tional Linguistics (2021). Available: https://aclanthology.org/2021.humeval-1.13/ 
+8. Fleiss, J. L. (1971). Measuring nominal scale agreement among ma ny raters In Psycholog-
+ical Bulletin, 76, 378-382, 1971 
+9. Cohen, J.: A coefficient of agreement for nominal scales. Educational and Psychological 
+Measurement 20(1), 37–46 (1960) 
+10. Artstein, R., Poesio, M.: Inter -coder agreement for computational linguistics. Re search on 
+Language and Computation 6(4), 555–596 (2008) 
+11. Dat Quoc Nguyen and Anh Tuan Nguyen. 2020.PhoBERT: Pre -trained language models  
+for Vietnamese. InFindings of the Association for Computational Linguistics: EMNLP 
+2020, pages 1037–1042, Online. Association for Computational Linguistics. 
+12. Cortes, C., Vapnik, V.: Support -vector networks. Machine Learning 20(3), 273 –297 
+(1995). https://doi.org/10.1007/BF00994018 
+13. Hosmer Jr, D.W., Lemeshow, S., Sturdivant, R.X.: Applied Logistic Regression. John 
+Wiley & Sons (2013). 
+14. McCallum, A., Nigam, K.: A comparison of event models for Naive Bayes text classifica-
+tion. In: AAAI -98 Workshop on Learning for Text Categorization, vol. 752, pp. 41 –48 
+(1998). 
+15. Rumelhart, D.E., Hinton, G.E., Williams, R.J.: Learning representations  by back -
+propagating errors. Nature 323(6088), 533–536 (1986). https://doi.org/10.1038/323533a0 
+16. Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, 
+M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J.: Scikit -learn: Machine learn-
+ing in Python. Journal of Machine Learning Research 12, 2825–2830 (2011). 
+17. Xuan-Luan Nguyen: PyVi: Vietnamese Natural Language Processing Toolkit (2016). 
+Available at: https://github.com/trungtn/pyvi. 
+ 
+ 
+ 
+ 
+ 
+
