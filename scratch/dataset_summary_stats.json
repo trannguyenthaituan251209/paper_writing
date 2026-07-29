@@ -1,0 +1,27 @@
+{
+  "total_raw": 2314,
+  "fleiss_kappa": 0.8960603408980018,
+  "P_bar": 0.953922980889273,
+  "P_e_bar": 0.5566945330702822,
+  "consensus_10_10": 1937,
+  "consensus_ham_10_10": 1468,
+  "consensus_spam_10_10": 469,
+  "disagreement_count": 377,
+  "disagreement_breakdown": {
+    "1": 17,
+    "2": 7,
+    "3": 1,
+    "4": 5,
+    "5": 0,
+    "6": 7,
+    "7": 20,
+    "8": 132,
+    "9": 188
+  },
+  "duplicates_removed": 492,
+  "duplicate_ham": 401,
+  "duplicate_spam": 91,
+  "unique_benchmark": 1822,
+  "unique_ham": 1097,
+  "unique_spam": 725
+}

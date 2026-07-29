@@ -32,7 +32,7 @@ NHÓM A: LỖI BẮT BUỘC SỬA KỸ THUẬT VÀ MÂU THUẪN DỮ LIỆU (BLO
        + Dữ liệu schema Table 4 bị lệch kiểu (message_id ghi Integer nhưng ví dụ ghi String 'COM_001'; source ghi crawl, user_report, whitelist nhưng ví dụ ghi 'internet').
        + Các file gold_standard.csv và benchmark_subset.csv thiếu thuộc tính `message_id`, làm đứt gãy khả năng truy vết ngược về ma trận bỏ phiếu metadata_distribution.json.
      - Hành động chuẩn hóa: 
-       + Dựng một bảng Luồng dữ liệu thống nhất: Raw (2,058) -> Loại bỏ nhiễu (-51) -> Gold Standard (2,007) -> Loại trùng lặp (-466) -> Unique Benchmark (1,541).
+       + Dựng một bảng Luồng dữ liệu thống nhất: Raw (2,314) -> Gold Standard (2,314) -> Loại trùng lặp Jaccard >= 0.85 (-492) -> Unique Benchmark (1,822: 1,097 Ham + 725 Spam). Fleiss' Kappa = 0.8961 (Landis & Koch: Almost Perfect).
        + Trích xuất dữ liệu thực tế vẽ lại Fig. 3 bằng kịch bản code tự động.
        + Thêm thuộc tính `message_id` vào toàn bộ các phân đoạn CSV để đảm bảo tính liên kết dữ liệu.
 

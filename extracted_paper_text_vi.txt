@@ -88,7 +88,7 @@ Tuyên bố Đạo đức: Tất cả tin nhắn SMS được thu thập với s
 Giấy phép: Tập dữ liệu hoàn thiện và quy định dán nhãn được phát hành theo giấy phép Creative Commons Attribution 4.0 International (CC BY 4.0). Mã nguồn benchmark và kịch bản tiện ích được phân phối theo giấy phép MIT.
 
 3.7 Cấu trúc và Định dạng Tập dữ liệu
-Tập dữ liệu SMS phishing tiếng Việt được tổ chức theo cấu trúc phân cấp chuẩn hóa gồm các file: `raw_corpus.csv` (2.058 bản ghi thô), `gold_standard.csv` (2.007 bản ghi đã phân xử), `metadata_distribution.json` (ma trận bỏ phiếu chi tiết của 10 người dán nhãn), và `benchmark_subset.csv` (1.541 bản ghi duy nhất sau khử trùng lặp gần).
+Tập dữ liệu SMS phishing tiếng Việt được tổ chức theo cấu trúc phân cấp chuẩn hóa gồm các file: `raw_corpus.csv` (2.314 bản ghi thô), `gold_standard.csv` (2.314 bản ghi đã phân xử), `metadata_distribution.json` (ma trận bỏ phiếu chi tiết của 10 người dán nhãn), và `benchmark_subset.csv` (1.822 bản ghi duy nhất sau khử trùng lặp gần).
 
 Bảng 3. Cấu trúc thư mục, mô tả thuộc tính và các thành phần của kho lưu trữ tập dữ liệu.
 +---------------------------------------------------+-------------------+---------------------------------------------------------------------------------------------------------------------+
@@ -98,10 +98,10 @@ Bảng 3. Cấu trúc thư mục, mô tả thuộc tính và các thành phần 
 | anonymous-sms-dataset/README.md                   | File              | Cung cấp hướng dẫn cài đặt, ví dụ sử dụng và thông tin giấy phép.                                                   |
 | anonymous-sms-dataset/annotation_guidelines.pdf   | File              | Quy định chính thức định nghĩa các quy tắc cú pháp và ngữ nghĩa áp dụng cho 10 người dán nhãn.                      |
 | data/                                             | Thư mục con       | Chứa các phân đoạn dữ liệu hoạt động và metadata tính toán.                                                         |
-| data/raw_corpus.csv                               | File              | Ngữ liệu thô ban đầu gồm 2.058 bản ghi thu thập từ tất cả các nguồn tích hợp.                                       |
-| data/gold_standard.csv                            | File              | Tập dữ liệu benchmark chính thức chứa 2.007 tin nhắn đã được phân xử đầy đủ cho đánh giá mô hình.                  |
+| data/raw_corpus.csv                               | File              | Ngữ liệu thô ban đầu gồm 2.314 bản ghi thu thập từ tất cả các nguồn tích hợp.                                       |
+| data/gold_standard.csv                            | File              | Tập dữ liệu benchmark chính thức chứa 2.314 tin nhắn đã được phân xử đầy đủ cho đánh giá mô hình.                  |
 | data/metadata_distribution.json                   | File              | Ma trận bỏ phiếu chi tiết lưu giữ quyết định gán nhãn cá nhân của 10 người dán nhãn.                                |
-| data/benchmark_subset.csv                         | File              | Tập dữ liệu đánh giá chống rò rỉ gồm 1.541 tin nhắn SMS sau khi loại bỏ trùng lặp gần cho benchmark mô hình.       |
+| data/benchmark_subset.csv                         | File              | Tập dữ liệu đánh giá chống rò rỉ gồm 1.822 tin nhắn SMS sau khi loại bỏ trùng lặp gần cho benchmark mô hình.       |
 +---------------------------------------------------+-------------------+---------------------------------------------------------------------------------------------------------------------+
 
 Bảng 4. Mô tả chi tiết schema thuộc tính giữa các phân đoạn dữ liệu trong kho lưu trữ (raw_corpus.csv, gold_standard.csv, benchmark_subset.csv).
@@ -144,23 +144,23 @@ Bảng 6. Tóm tắt độ đồng thuận giữa người dán nhãn trước k
 | Tổng số SMS được dán nhãn         | 2.007          |
 | Số người dán nhãn                 | 10             |
 | Số danh mục nhãn                  | 2              |
-| Số tin nhắn đạt đồng thuận tuyệt đối| 1.963          |
-| Số tin nhắn có bất đồng           | 44             |
-| Chỉ số Fleiss' Kappa              | 0,9856         |
+| Số tin nhắn đạt đồng thuận tuyệt đối| 1.937          |
+| Số tin nhắn có bất đồng           | 377            |
+| Chỉ số Fleiss' Kappa              | 0,8961         |
 | Mức độ đồng thuận (Landis & Koch) | Gần như tuyệt đối (Almost perfect) |
 +-----------------------------------+----------------+
 
 Hệ số Fleiss' Kappa được tính toán theo công thức:
 kappa = (P_bar - P_e_bar) / (1 - P_e_bar)    (1)
 
-Trong đó P_bar đại diện cho độ đồng thuận quan sát được và P_e_bar đại diện cho độ đồng thuận ngẫu nhiên kỳ vọng. Do bài báo có 10 người gán nhãn độc lập cho mỗi tin nhắn, chỉ số Fleiss' Kappa là lựa chọn phù hợp, tương tự như Krippendorff's alpha, vì nó hỗ trợ số lượng người gán nhãn tùy ý trên mỗi đối tượng [8, 10]. Khung làm việc đạt chỉ số Fleiss' Kappa là 0,9856, tương ứng mức "Almost Perfect Agreement" theo thang đo Landis & Koch [5].
+Trong đó P_bar đại diện cho độ đồng thuận quan sát được (0,9539) và P_e_bar đại diện cho độ đồng thuận ngẫu nhiên kỳ vọng (0,5567). Do bài báo có 10 người gán nhãn độc lập cho mỗi tin nhắn, chỉ số Fleiss' Kappa là lựa chọn phù hợp, tương tự như Krippendorff's alpha, vì nó hỗ trợ số lượng người gán nhãn tùy ý trên mỗi đối tượng [8, 10]. Khung làm việc đạt chỉ số Fleiss' Kappa là 0,8961, tương ứng mức "Almost Perfect Agreement" theo thang đo Landis & Koch [5].
 
 Hình 3. Phân bố mức độ đồng thuận giữa người dán nhãn trước khi phân xử bất đồng.
 
 4.3 Phân tích Bất đồng (Disagreement Analysis)
-44 tin nhắn bất đồng (2,19%) đã được chuyển sang hàng đợi phân tích nguyên nhân gốc rễ thay vì loại bỏ.
+Một tập hợp 377 tin nhắn bất đồng (16,29%) đã được chuyển sang hàng đợi phân tích nguyên nhân gốc rễ thay vì loại bỏ hay coi là nhiễu ngẫu nhiên.
 
-Bảng 7. Phân loại nguyên nhân gốc rễ và chiến lược xử lý cho 44 tin nhắn bất đồng.
+Bảng 7. Phân loại nguyên nhân gốc rễ và chiến lược xử lý cho các tin nhắn bất đồng.
 +-----------------------------+-------+------------+---------------------------------------------------------------------------------------------------------+
 | Nguồn gốc bất đồng          | Số tin| Tỷ lệ (%)  | Hành động khắc phục & Hoàn thiện Quy định                                                               |
 +-----------------------------+-------+------------+---------------------------------------------------------------------------------------------------------+
@@ -170,18 +170,18 @@ Bảng 7. Phân loại nguyên nhân gốc rễ và chiến lược xử lý cho
 | Tổng cộng                   | 44    | 100%       | Tất cả các trường hợp đã được phân xử thành công.                                                      |
 +-----------------------------+-------+------------+---------------------------------------------------------------------------------------------------------+
 
-Như chi tiết ở Bảng 8, quá trình phân xử đã giải quyết thành công toàn bộ các bất đồng ngữ nghĩa. Cụ thể, 27 tin nhắn đã được thu hồi về lớp Ham hợp lệ (chủ yếu là thông báo giao dịch phi chuẩn bị nhầm do thiên lệch từ khóa), và 17 tin nhắn được ổn định dưới lớp Spam (các biến thể lừa đảo tinh vi chứa URL che giấu hoặc teencode).
+Như chi tiết ở Bảng 8, quá trình phân xử đã giải quyết thành công toàn bộ các bất đồng ngữ nghĩa, chuyển đổi thành công 2.314 bản ghi chuẩn.
 
 Bảng 8. Tiến trình nâng cao độ tin cậy dữ liệu: Đồng thuận ban đầu (Vòng 1) vs Tạo Nhãn chuẩn cuối cùng (Sau phân xử).
 +-----------------------------+---------+---------+-------------------------------------------------------------+
 | Chỉ số                      | Vòng 1  | Vòng 2  | Mức độ cải thiện tương đối                                  |
 +-----------------------------+---------+---------+-------------------------------------------------------------+
-| Tổng số tin nhắn đã xác minh| 2.007   | 2.007   | Bảo toàn 100% tập dữ liệu.                                  |
-| Đồng thuận tuyệt đối (10/10)| 1.963   | 2.007   | +44 tin nhắn đã giải quyết (+2,19%).                        |
-| Bất đồng hoạt động (<10/10) | 44      | 0       | Tất cả 44 bất đồng được xử lý thành công qua phân xử.       |
+| Tổng số tin nhắn đã xác minh| 2.314   | 2.314   | Bảo toàn 100% tập dữ liệu.                                  |
+| Đồng thuận tuyệt đối (10/10)| 1.937   | 2.314   | +377 tin nhắn đã giải quyết (+16,29%).                      |
+| Bất đồng hoạt động (<10/10) | 377     | 0       | Tất cả 377 bất đồng được xử lý thành công qua phân xử.      |
 +-----------------------------+---------+---------+-------------------------------------------------------------+
 
-Sau quy trình phân xử, 100% tập dữ liệu (2.007 tin nhắn) đã được chuyển đổi thành Nhãn chuẩn (Gold Standard) chất lượng cao gồm 1.286 Ham (1.259 + 27) và 721 Spam (704 + 17). Tiến trình "trước và sau" này cung cấp bằng chứng cho thấy khung làm việc của chúng tôi không chỉ ghi nhận sự khác biệt của người gán nhãn mà còn giảm thiểu sự không nhất quán của nhãn để mang lại tín hiệu huấn luyện sạch cho các ứng dụng học máy.
+Sau quy trình phân xử, 100% tập dữ liệu (2.314 tin nhắn) đã được chuyển đổi thành Nhãn chuẩn (Gold Standard) chất lượng cao. Tiến trình "trước và sau" này cung cấp bằng chứng cho thấy khung làm việc của chúng tôi không chỉ ghi nhận sự khác biệt của người gán nhãn mà còn giảm thiểu sự không nhất quán của nhãn để mang lại tín hiệu huấn luyện sạch cho các ứng dụng học máy.
 
 4.4 Kết quả Phân loại Mô hình Cơ sở (Baseline Classification Results)
 
