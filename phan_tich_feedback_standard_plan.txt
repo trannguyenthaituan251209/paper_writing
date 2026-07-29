@@ -60,9 +60,11 @@ NHÓM B: CỦNG CỐ ĐÓNG GÓP KHOA HỌC VÀ ĐỘNG CƠ DỮ LIỆU (SCIENTI
        + Chạy thực nghiệm so sánh (Ablation): Train mô hình trên nhãn Majority Vote vs nhãn Gold Adjudicated trên cùng tập test.
        + Đưa ra phát hiện định tính mạnh: Trong 44 ca bất đồng, Majority Vote nghiêng về Spam ở 36 ca, nhưng sau phân xử chuyên sâu (Adjudication) kết quả đảo ngược thành 27 Ham / 17 Spam. Đây là bằng chứng thực tế khẳng định Majority Vote đơn thuần bị thiên lệch từ khóa.
 
-[B3] Khai thác Taxonomy 3 lớp (Commercial Spam vs Phishing Spam):
-     - Vấn đề: Tiêu đề nhắc đến "Phishing" và bài định nghĩa 3 lớp ngữ nghĩa, nhưng dữ liệu công bố lại gộp về nhị phân (Binary).
-     - Giải pháp: Cung cấp nhãn 3 lớp (Ham / Commercial Spam / Phishing Spam) trong kho dữ liệu phát hành để tăng tối đa giá trị nghiên cứu cho cộng đồng và biện minh cho tiêu đề.
+[B3] Quyết định giữ Taxonomy Nhị phân (Binary Classification: Ham vs Spam):
+     - Quyết định: Giữ nguyên nhãn Nhị phân (Ham vs Spam) do giới hạn thời gian.
+     - Biện luận chuẩn Q1 trong bài báo: 
+       + Giải thích rõ trong §3.3: Phân loại nhị phân phản ánh chính xác cơ chế hoạt động thực tế của các hệ thống tường lửa (SMS Anti-Spam Gateways) trên mạng viễn thông (chỉ có 2 quyết định: Cho qua / Chặn).
+       + Trong Quy định Dán nhãn (Guideline), việc phân biệt Commercial Spam và Phishing Spam đóng vai trò hướng dẫn người dán nhãn phân tích sâu ý đồ truyền thông, nhưng cả hai đều thuộc diện tin rác/lừa đảo và được gán nhãn mục tiêu thống nhất là Spam cho bài toán phát hiện nhị phân.
 
 [B4] Chuẩn hóa thống kê Fleiss' Kappa và Minh bạch Nhân sự Adjudication (B5):
      - Bổ sung chỉ số Krippendorff's alpha và Gwet's AC1 cùng khoảng tin cậy Bootstrap CI cho Fleiss' Kappa để tránh hiện tượng "Kappa Paradox".
@@ -112,27 +114,34 @@ Các tạp chí Q1 phạt rất nặng ngôn ngữ mang tính "quảng cáo / kh
 +-------------------------------------------+-----------------------------------+------------------------------------------------------------------+
 
 ====================================================================================================
-3. LỘ TRÌNH VÀ KẾ HOẠCH HÀNH ĐỘNG TIÊU CHUẨN (STANDARD ACTION ROADMAP)
+3. LỘ TRÌNH VÀ KẾ HOẠCH HÀNH ĐỘNG TUYẾN TÍNH 3 GIAI ĐOẠN (NON-CONFLICTING LINEAR ROADMAP)
 ====================================================================================================
+Để triệt tiêu hoàn toàn xung đột dữ liệu, tránh việc phải chạy lại mã nguồn hoặc sửa đổi văn bản nhiều lần, toàn bộ quy trình sửa chữa được tổ chức tuyến tính theo 3 Giai đoạn cốt lõi:
 
-Giai đoạn 1: Chuẩn hóa Dữ liệu & Khắc phục Lỗi Kỹ thuật cốt lõi (Hoàn thành Nhóm A & D5)
-  - Bước 1.1: Tạo script tự động kiểm tra và làm sạch ma trận dữ liệu thô. Dựng bảng Luồng dữ liệu chuẩn (2,058 -> 2,007 -> 1,541).
-  - Bước 1.2: Cập nhật `message_id` cho tất cả các file CSV để đảm bảo tính liên kết dữ liệu hoàn hảo.
-  - Bước 1.3: Sửa công thức toán F1-Score (Eq. 3) và sửa toàn bộ tham chiếu cross-referencing bị lệch trong văn bản.
-  - Bước 1.4: Đóng gói repository lên Zenodo/HuggingFace để lấy mã DOI chính thức.
+GIAI ĐOẠN 1: KHÓA THIẾT KẾ & GIAO THỨC DỮ LIỆU (DATA PROTOCOL & SCHEMA LOCK)
+----------------------------------------------------------------------------------------------------
+  - Bước 1.1 [Mục B3]: Khóa quyết định giữ Taxonomy Nhị phân (Ham / Spam) và bổ sung đoạn văn biện luận tính phù hợp với các hệ thống SMS Anti-Spam Gateway viễn thông thực tế.
+  - Bước 1.2 [Mục A2]: Bổ sung thuộc tính `message_id` xuyên suốt các file CSV (gold_standard.csv, benchmark_subset.csv) để đảm bảo khả năng truy vết dữ liệu 100%.
+  - Bước 1.3 [Mục A2]: Viết script tự động `build_canonical_data.py` làm sạch và khớp số liệu chuẩn:
+    Raw (2,058) -> Loại nhiễu (-51) -> Gold Standard (2,007) -> Khử trùng lặp (-466) -> Unique Benchmark (1,541).
+  - Bước 1.4 [Mục A2]: Vẽ lại biểu đồ Hình 3 (Fig. 3) từ dữ liệu thực tế đã khớp nối bằng kịch bản code tự động.
+  - Bước 1.5 [Mục A3]: Cài đặt giao thức chia tập dữ liệu chuẩn **Nested 5-Fold CV (80 Train / 10 Val / 10 Test)** để khắc phục lỗi rò rỉ dữ liệu test trong model selection.
 
-Giai đoạn 2: Bổ sung Thực nghiệm Khoa học & Mô hình hóa Nâng cao (Hoàn thành Nhóm B & C)
-  - Bước 2.1: Cài đặt quy trình Nested CV (80/10/10) để loại bỏ rò rỉ dữ liệu test trong model selection.
-  - Bước 2.2: Chạy các mô hình baselines bổ sung (ViSoBERT, XLM-R, LLM Zero-shot, Character n-gram).
-  - Bước 2.3: Thực hiện thí nghiệm Ablation (Majority Vote vs Adjudicated Gold) và Cross-dataset Evaluation với corpus cũ.
-  - Bước 2.4: Tính toán kiểm định ý nghĩa thống kê (McNemar/Wilcoxon) và các chỉ số thống kê dán nhãn bổ sung (Krippendorff's alpha, Gwet's AC1, Bootstrap CI).
+GIAI ĐOẠN 2: THỰC THI THỰC NGHIỆM VÀ THỐNG KÊ MÔ HÌNH NÂNG CAO (ADVANCED EXPERIMENTS & STATS)
+----------------------------------------------------------------------------------------------------
+  - Bước 2.1 [Mục B2]: Thực nghiệm Ablation Study (Train trên Majority Vote vs Train trên Gold Adjudicated).
+  - Bước 2.2 [Mục B1]: Thực nghiệm Cross-Dataset Evaluation (Ours vs Pham & Le-Hong 2016) & Audit ngẫu nhiên 300-500 bản ghi dữ liệu cũ.
+  - Bước 2.3 [Mục C2-C5]: Chạy các Baselines mới (ViSoBERT, XLM-R, LLM Zero-shot, TF-IDF Char n-gram 3-5) với Multi-seed (>=5 seeds).
+  - Bước 2.4 [Mục C6-C8]: Đánh giá GroupKFold CV, Sensitivity Analysis ngưỡng Jaccard (J ∈ {0.7, 0.8, 0.85, 0.9, 0.95}), và OOD Temporal test set.
+  - Bước 2.5 [Mục B4, C1]: Tính toán kiểm định ý nghĩa thống kê (McNemar / Wilcoxon), khoảng tin cậy Bootstrap CI, Krippendorff's alpha, và Gwet's AC1.
 
-Giai đoạn 3: Rà soát Giọng văn, Hoàn thiện Phụ lục & Hồ sơ Đạo đức (Hoàn thành Nhóm B3, B5, D1-D8 & E)
-  - Bước 3.1: Rà soát toàn văn bài báo và thay thế toàn bộ ngôn ngữ khẳng định quá đà (Overclaim) theo Bảng chuẩn Nhóm E.
-  - Bước 3.2: Viết mới phần Phụ lục (Datasheet for Datasets & Phân tích lỗi định tính).
-  - Bước 3.3: Bổ sung tuyên bố IRB, quy trình Consent, audit PII và thông tin chi tiết về thù lao/nhân sự dán nhãn.
-  - Bước 3.4: Cập nhật lại toàn bộ báo cáo kết quả thực nghiệm và thảo luận khoa học trong văn bản chính.
+GIAI ĐOẠN 3: HOÀN THIỆN VĂN BẢN, PHỤ LỤC & CHUẨN HÓA GIỌNG VĂN (WRITING, ETHICS & DE-OVERCLAIMING)
+----------------------------------------------------------------------------------------------------
+  - Bước 3.1 [Mục A1, A4, A5]: Sửa công thức toán F1-Score (Eq. 3), sửa toàn bộ trỏ cross-references (Table/Fig), dọn dẹp đoạn trùng lặp ở §3.3.
+  - Bước 3.2 [Mục D1-D8, B5]: Bổ sung hồ sơ Đạo đức (IRB Approval, Consent Form, PII Audit 200 tin, thù lao & nhân sự Adjudication).
+  - Bước 3.3 [Mục D5, D6]: Phát hành kho dữ liệu lên Zenodo/HuggingFace để lấy mã DOI cố định; Viết Phụ lục Datasheet for Datasets & Phân tích lỗi định tính (C9).
+  - Bước 3.4 [Mục E]: Quét toàn bộ văn bản và thay thế toàn bộ từ ngữ overclaim theo Bảng chuẩn hóa Nhóm E (Academic De-overclaiming).
 
 ====================================================================================================
-Tài liệu này được lưu trữ làm Chuẩn mực Kế hoạch (Standard Plan) cho các bước triển khai tiếp theo.
+Tài liệu này được lưu trữ làm Chuẩn mực Kế hoạch Tuyến tính (Standard Linear Plan) cho việc triển khai.
 ====================================================================================================
